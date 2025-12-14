@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 # Chame isso em algum lugar perto do BASE_DIR se ainda não estiver fazendo
 load_dotenv()
@@ -23,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-sua-chave-secreta-aqui'  # Mantenha sua chave original
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['jrtechhub.online',
                  'www.jrtechhub.online', '127.0.0.1', 'localhost', '*']
@@ -87,6 +88,11 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Se existir a variável DATABASE_URL (o Render cria ela automaticamente), usa PostgreSQL
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    DATABASES['default'] = dj_database_url.parse(database_url)
 
 
 # Password validation
