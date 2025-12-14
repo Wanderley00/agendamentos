@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {# As telas da sua aplicação de página única (SPA) devem estar aqui #}
+    {% include 'agendamentos/partials/home.html' %}
+    {% include 'agendamentos/partials/warnings.html' %}
+    {% include 'agendamentos/partials/services.html' %}
+    
+    {% include 'agendamentos/partials/professional.html' %}
+    
+    {% include 'agendamentos/partials/calendar.html' %}
+    {% include 'agendamentos/partials/login.html' %}
+
+    {% include 'agendamentos/partials/payment.html' %}
+    {% include 'agendamentos/partials/payment_failed.html' %}
+    {% include 'agendamentos/partials/confirmation.html' %}
+    {% include 'agendamentos/partials/client_area.html' %}
+    {% include 'agendamentos/partials/profile.html' %}
+    {% include 'agendamentos/partials/forced_login.html' %}
+    {% include 'agendamentos/partials/admin_login.html' %}
+{% endblock %}

@@ -1,0 +1,71 @@
+<div class="tab-content hidden" id="tab-income">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">Gestão de Receitas</div>
+        <div class="dashboard-card-body">
+            <div class="action-bar">
+                <div class="period-selector">
+                    <label>Período:</label>
+                    <select id="income-period" class="form-control">
+                        <option value="semana">Esta Semana</option>
+                        <option value="mes" selected>Este Mês</option>
+                        <option value="ano">Este Ano</option>
+                        <option value="custom">Personalizado</option>
+                    </select>
+                </div>
+                
+                <div id="income-custom-period" class="custom-period hidden">
+                    <div class="form-row">
+                        <input type="date" id="income-start" class="form-control">
+                        <span>até</span>
+                        <input type="date" id="income-end" class="form-control">
+                        <button id="income-apply" class="btn btn--primary btn--sm">Aplicar</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="income-chart"></canvas>
+            </div>
+            
+            <h4>Pagamentos Recebidos</h4>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Serviço</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="income-table">
+                        <tr>
+                            <td colspan="5">Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h4>Pagamentos Pendentes</h4>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Serviço</th>
+                            <th>Valor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-table">
+                        <tr>
+                            <td colspan="5">Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

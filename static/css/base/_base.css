@@ -1,0 +1,68 @@
+/* * Estilos de base: reset, tags HTML (body, h1, p) e o .container principal.
+ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  line-height: var(--line-height-normal);
+}
+
+h1, h2, h3, h4, h5 { 
+  font-weight: var(--font-weight-semibold); 
+  margin: 0; 
+  line-height: var(--line-height-tight);
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-xl); }
+h3 { font-size: var(--font-size-lg); }
+h4 { font-size: var(--font-size-base); }
+h5 { font-size: var(--font-size-sm); }
+
+p { 
+  margin: 0 0 var(--space-16) 0; 
+  line-height: var(--line-height-relaxed);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--duration-fast) ease;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* Container Responsivo */
+.container {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 var(--space-24);
+  }
+}
+
+/* Ajustes gerais de responsividade */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--space-16);
+  }
+}

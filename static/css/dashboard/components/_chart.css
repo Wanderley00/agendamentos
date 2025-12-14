@@ -1,0 +1,12 @@
+/* static/css/dashboard/components/_chart.css */
+.chart-container {
+  position: relative;
+  height: 300px; /* Altura padrão */
+  max-height: 50vh;
+  margin: var(--space-20) 0;
+  width: 100%;
+}
+/* Para gráficos menores, como na visão geral */
+.dashboard-grid .chart-container {
+  height: 250px;
+}

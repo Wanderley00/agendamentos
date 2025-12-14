@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório - {{ negocio.nome_negocio }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+            @frame footer_frame {
+                -pdf-frame-content: footerContent;
+                bottom: 0cm;
+                margin-left: 1cm;
+                margin-right: 1cm;
+                height: 1cm;
+            }
+        }
+        body {
+            font-family: Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #333;
+        }
+        .header {
+            width: 100%;
+            border-bottom: 2px solid {{ cor_primaria }};
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header-content {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .logo {
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+        .business-info h1 {
+            margin: 0;
+            color: {{ cor_primaria }};
+            font-size: 16pt;
+        }
+        .business-info p {
+            margin: 2px 0;
+            font-size: 8pt;
+            color: #666;
+        }
+        .meta-info {
+            text-align: right;
+            font-size: 8pt;
+            color: #777;
+            padding-top: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th {
+            background-color: {{ cor_primaria }};
+            color: #fff;
+            padding: 6px;
+            text-align: left;
+            font-size: 9pt;
+        }
+        td {
+            border-bottom: 1px solid #eee;
+            padding: 6px;
+            font-size: 9pt;
+        }
+        .total-row td {
+            border-top: 2px solid {{ cor_primaria }};
+            font-weight: bold;
+            font-size: 11pt;
+            background-color: #f9f9f9;
+        }
+        .status-paid { color: green; }
+        .status-pending { color: orange; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            {% if logo_url %}
+            <img src="{{ logo_url }}" class="logo" />
+            {% endif %}
+        </div>
+        <div class="header-content business-info">
+            <h1>{{ negocio.nome_negocio }}</h1>
+            <p>{{ negocio.tagline }}</p>
+            <p>{{ negocio.endereco|default:"" }} | {{ negocio.telefone_contato|default:"" }}</p>
+        </div>
+        <div class="meta-info">
+            <strong>Relatório de {{ tipo_relatorio }}</strong><br>
+            Período: {{ periodo_inicio|date:"d/m/Y" }} a {{ periodo_fim|date:"d/m/Y" }}<br>
+            Gerado por: {{ usuario.get_full_name }} em {{ data_geracao|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                {% for header in headers %}
+                <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if template_type == 'despesas' %}
+                {% for item in rows %}
+                <tr>
+                    <td>{{ item.data|date:"d/m/Y" }}</td>
+                    <td>{{ item.descricao }}</td>
+                    <td>{{ item.categoria }}</td>
+                    <td>R$ {{ item.valor }}</td>
+                    <td>{% if item.pago %}Pago{% else %}Pendente{% endif %}</td>
+                </tr>
+                {% endfor %}
+            
+            {% elif template_type == 'servicos' %}
+                {% for item in rows %}
+                <tr>
+                    <td>{{ item.servico__nome }}</td>
+                    <td>{{ item.servico__categoria__nome|default:"-" }}</td>
+                    <td>{{ item.qtd }}</td>
+                    <td>R$ {{ item.total|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+
+            {% else %} {% for item in rows %}
+                <tr>
+                    <td>{{ item.data|date:"d/m/Y" }}</td>
+                    <td>{{ item.horario|date:"H:i" }}</td>
+                    <td>{{ item.cliente.user.get_full_name }}</td>
+                    <td>{{ item.servico.nome }}</td>
+                    <td>R$ {{ item.preco_final }}</td>
+                    <td>
+                        <span class="{% if item.status_pagamento == 'Pago' %}status-paid{% else %}status-pending{% endif %}">
+                            {{ item.status_pagamento }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="{{ headers|length|add:'-1' }}" style="text-align: right;">Total Geral:</td>
+                <td>R$ {{ total_geral|floatformat:2 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div id="footerContent" style="text-align: center; color: #999; font-size: 8pt;">
+        Documento gerado automaticamente pelo sistema Bella Designer.
+        Página <pdf:pagenumber> de <pdf:pagecount>
+    </div>
+</body>
+</html> 

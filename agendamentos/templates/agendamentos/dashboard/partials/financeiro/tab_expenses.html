@@ -1,0 +1,86 @@
+<div class="tab-content hidden" id="tab-expenses">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">Gestão de Despesas</div>
+        <div class="dashboard-card-body">
+            <div class="action-bar" style="flex-wrap: wrap; gap: 10px;">
+                <button id="btn-add-expense" class="btn btn--primary">Nova Despesa</button>
+                <button id="btn-manage-recurring" class="btn btn--outline">Gerenciar Recorrentes</button>
+                
+                <div class="filters">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <select id="expense-period" class="form-control">
+                            <option value="semana">Esta Semana</option>
+                            <option value="mes" selected>Este Mês</option>
+                            <option value="ano">Este Ano</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                        
+                        <div id="expense-custom-period" class="custom-period hidden">
+                            <div class="form-row" style="margin-bottom: 0;">
+                                <input type="date" id="expense-start" class="form-control">
+                                <span style="align-self: center;">até</span>
+                                <input type="date" id="expense-end" class="form-control">
+                                <button id="expense-apply" class="btn btn--primary btn--sm">Aplicar</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <select id="expense-category" class="form-control" style="height: fit-content;">
+                        <option value="">Todas as Categorias</option>
+                        <option value="Aluguel">Aluguel</option>
+                        <option value="Materiais">Materiais</option>
+                        <option value="Serviços">Serviços</option>
+                        <option value="Impostos">Impostos</option>
+                        <option value="Salários">Salários</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="expenses-chart"></canvas>
+            </div>
+            
+            <div class="summary-table">
+                <h4>Resumo por Categoria</h4>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Categoria</th>
+                                <th>Quantidade</th>
+                                <th>Valor Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenses-summary">
+                            <tr>
+                                <td colspan="3">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <h4 style="margin-top: 24px;">Lista de Despesas</h4>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Categoria</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenses-table">
+                        <tr>
+                            <td colspan="6">Carregando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,54 @@
+/* * Estilos para a Área do Cliente (Barra de Usuário, lista de agendamentos)
+ */
+.user-bar {
+  background: var(--color-primary);
+  color: var(--color-white);
+  padding: var(--space-8) 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-info span {
+  font-weight: var(--font-weight-medium);
+}
+
+.user-actions {
+  display: flex;
+  gap: var(--space-16);
+}
+
+.user-action {
+  color: var(--color-white);
+  text-decoration: none;
+  opacity: 0.9;
+  font-size: var(--font-size-sm);
+  transition: opacity var(--duration-fast) ease;
+}
+
+.user-action:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.appointments-section {
+  margin-bottom: var(--space-32);
+  animation: fadeIn 0.5s ease;
+}
+
+@media (max-width: 768px) {
+  .user-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-8);
+  }
+  
+  .user-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

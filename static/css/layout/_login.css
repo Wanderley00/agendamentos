@@ -1,0 +1,139 @@
+/* * Estilos de layout para a Tela de Login/Cadastro
+ */
+.login-container {
+  display: grid;
+  gap: var(--space-32);
+  grid-template-columns: 1fr;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.login-form-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-24);
+  box-shadow: var(--shadow-sm);
+}
+
+.booking-summary {
+  background: var(--color-mint-green-light);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-24);
+  height: fit-content;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.booking-summary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(to right, var(--color-primary), var(--color-primary-hover));
+}
+
+.booking-summary h3 {
+  margin-bottom: var(--space-20);
+  color: var(--color-primary-active);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-12) 0;
+  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.2);
+}
+
+.summary-item .label {
+  color: var(--color-text-secondary);
+}
+
+.summary-item .value {
+  font-weight: var(--font-weight-semibold);
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  padding-top: var(--space-16);
+  margin-top: var(--space-16);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.summary-total .value {
+  color: var(--color-primary);
+}
+
+/* Mensagem de "Já logado" */
+.auth-success-message {
+  text-align: center;
+  padding: var(--space-24);
+}
+
+.auth-success-message .success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background-color: var(--color-mint-green-light);
+  border-radius: var(--radius-full);
+  margin: 0 auto var(--space-20);
+  font-size: var(--font-size-xl);
+  color: var(--color-primary);
+}
+
+.auth-success-message h3 {
+  margin-bottom: var(--space-12);
+  color: var(--color-success);
+}
+
+.auth-success-message p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-8);
+}
+
+.auth-actions {
+  display: flex;
+  gap: var(--space-12);
+  margin-top: var(--space-20);
+  justify-content: center;
+}
+
+
+@media (min-width: 768px) {
+  .login-container {
+    grid-template-columns: 1fr 350px;
+  }
+}
+
+/* --- CSS para centralizar o Resumo quando logado --- */
+
+/* Quando adicionamos esta classe via JS, o layout muda */
+.login-container.authenticated-mode {
+    display: flex;
+    justify-content: center;
+}
+
+.login-container.authenticated-mode .login-form-section {
+    display: none; /* Esconde a caixa da esquerda */
+}
+
+.login-container.authenticated-mode .booking-summary {
+    width: 100%;
+    max-width: 450px; /* Largura ideal para leitura */
+    background: var(--color-surface); /* Fundo branco limpo */
+    border-color: var(--color-border);
+}
+
+/* Remove a barra colorida do topo quando está no modo resumo final */
+.login-container.authenticated-mode .booking-summary::before {
+    display: none;
+}

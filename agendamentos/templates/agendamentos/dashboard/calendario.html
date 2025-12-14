@@ -1,0 +1,769 @@
+{% extends 'agendamentos/dashboard/base.html' %}
+
+{% block dashboard_content %}
+<style>
+    /* Estilos para o novo modal de cliente */
+    .form-toggle {
+        display: flex;
+        background: var(--color-gray-50);
+        border-radius: var(--radius-base);
+        padding: var(--space-4);
+        margin-bottom: var(--space-24);
+        position: relative;
+    }
+    .toggle-btn {
+        flex: 1;
+        padding: var(--space-12);
+        border: none;
+        background: transparent;
+        border-radius: var(--radius-base);
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--color-gray-500);
+        position: relative;
+        z-index: 1;
+        transition: color 0.3s ease;
+    }
+    .toggle-btn.active {
+        color: var(--color-gray-900);
+    }
+    .form-toggle::before {
+        content: '';
+        position: absolute;
+        height: calc(100% - var(--space-8));
+        top: var(--space-4);
+        left: var(--space-4);
+        width: calc(50% - var(--space-4));
+        background: var(--color-white);
+        border-radius: var(--radius-base);
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.3s ease-out;
+        z-index: 0;
+    }
+    .form-toggle.toggle-right::before {
+        transform: translateX(calc(100% + var(--space-8)));
+    }
+
+    /* --- CSS da Legenda --- */
+    .calendar-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 1rem;
+        padding-left: 8px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        color: var(--color-gray-700);
+    }
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    /* --- CORREÇÃO DE VISUALIZAÇÃO DE EVENTOS CURTOS (FullCalendar) --- */
+    .fc-v-event {
+        /* Permite que o conteúdo flua melhor */
+        display: block; 
+        border: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .fc-event-main {
+        /* Garante que o texto quebre linha e não fique escondido */
+        white-space: normal !important; 
+        overflow: hidden;
+        padding: 4px;
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+    }
+
+    .fc-event-time {
+        font-weight: 800;
+        font-size: 0.75rem;
+        margin-bottom: 2px;
+    }
+
+    .fc-event-title {
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+</style>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-title">
+        Calendário de Agendamentos
+        <div class="btn-group">
+            <button class="btn btn--primary btn--sm" id="btn-new-appointment">Novo Agendamento</button>
+            <button class="btn btn--outline btn--sm" id="btn-month">Mês</button>
+            <button class="btn btn--outline btn--sm" id="btn-week">Semana</button>
+            <button class="btn btn--outline btn--sm" id="btn-day">Dia</button>
+        </div>
+    </div>
+    <div class="dashboard-card-body">
+        <p class="text-secondary" style="margin-bottom: 1rem; font-size: 0.875rem;">
+            Clique em um dia para agendar. Clique e arraste um evento para remanejar.
+        </p>
+        <div class="calendar-legend">
+            <span class="legend-item"><span class="legend-dot" style="background-color: #FF9500;"></span> Pendente</span>
+            <span class="legend-item"><span class="legend-dot" style="background-color: #0D99FF;"></span> Confirmado</span>
+            <span class="legend-item"><span class="legend-dot" style="background-color: #5CCFAC;"></span> Concluído</span>
+            <span class="legend-item"><span class="legend-dot" style="background-color: #FF5A5F;"></span> Cancelado</span>
+        </div>
+        <div id="calendar"></div>
+    </div>
+</div>
+
+<div id="event-modal" class="modal-container hidden">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3 id="event-modal-title">Editar Agendamento</h3>
+            <button id="event-modal-close" class="modal-close">×</button>
+        </div>
+        <div id="event-modal-body" class="modal-body">
+            <form id="event-edit-form">
+                <input type="hidden" id="event-edit-id">
+
+                <div class="form-group">
+                    <label class="form-label" for="event-edit-client">Cliente</label>
+                    <select id="event-edit-client" class="form-control" required>
+                        <option value="">Carregando clientes...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="event-edit-service">Serviço / Manutenção</label>
+                    <select id="event-edit-service" class="form-control" required>
+                        <option value="">Carregando serviços...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="event-edit-professional">Profissional Executor</label>
+                    <select id="event-edit-professional" class="form-control" required>
+                        <option value="">Carregando profissionais...</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="event-edit-date">Data</label>
+                        <input type="date" id="event-edit-date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="event-edit-time">Hora</label>
+                        <input type="time" id="event-edit-time" class="form-control" required step="900"> </div>
+                </div>
+                
+                <hr style="border: none; border-top: 1px solid var(--color-gray-100); margin: 24px 0;">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Status do Agendamento</label>
+                        <select id="event-edit-status" class="form-control">
+                            <option value="Pendente">Pendente</option>
+                            <option value="Confirmado">Confirmado</option>
+                            <option value="Concluído">Concluído</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status do Pagamento</label>
+                        <select id="event-edit-payment" class="form-control">
+                            <option value="Aguardando Pagamento">Aguardando Pagamento</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Adiantamento Realizado">Adiantamento Realizado</option>
+                            <option value="Pago">Pago</option> <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Observações (Internas)</label>
+                    <textarea id="event-edit-notes" class="form-control" rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button id="event-modal-delete" class="btn btn--outline" style="color: var(--color-danger); border-color: var(--color-danger); margin-right: auto;">Excluir Agendamento</button>
+            <button id="event-modal-cancel" class="btn btn--outline">Cancelar</button>
+            <button id="event-modal-save" class="btn btn--primary">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="new-event-modal" class="modal-container hidden">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3 id="new-event-modal-title">Novo Agendamento</h3>
+            <button id="new-event-modal-close" class="modal-close">×</button>
+        </div>
+        <form id="new-event-form">
+            <div class="modal-body">
+                
+                <div class="form-toggle">
+                    <button type="button" class="toggle-btn active" data-tab="existing-client">Cliente Existente</button>
+                    <button type="button" class="toggle-btn" data-tab="new-client">Novo Cliente</button>
+                </div>
+
+                <div id="panel-existing-client" class="form-tab-panel">
+                    <div class="form-group">
+                        <label class="form-label" for="new-event-client">Selecionar Cliente</label>
+                        <select id="new-event-client" class="form-control" required>
+                            <option value="">Carregando clientes...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="panel-new-client" class="form-tab-panel hidden">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="new-client-nome">Nome</label>
+                            <input type="text" id="new-client-nome" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="new-client-sobrenome">Sobrenome</label>
+                            <input type="text" id="new-client-sobrenome" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="new-client-telefone">Telefone (com DDD)</label>
+                            <input type="tel" id="new-client-telefone" class="form-control" placeholder="(11) 9....">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="new-client-nascimento">Data de Nascimento</label>
+                            <input type="date" id="new-client-nascimento" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="new-client-email">Email</label>
+                        <input type="email" id="new-client-email" class="form-control" placeholder="cliente@email.com">
+                    </div>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid var(--color-gray-100); margin: 24px 0;">
+
+                <div class="form-group">
+                    <label class="form-label" for="new-event-service">Serviço / Manutenção</label>
+                    <select id="new-event-service" class="form-control" required>
+                        <option value="">Selecione um serviço...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="new-event-professional">Profissional Executor</label>
+                    <select id="new-event-professional" class="form-control" required>
+                        <option value="">Selecione um profissional...</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="new-event-date">Data</label>
+                        <input type="date" id="new-event-date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="new-event-time">Hora</label>
+                        <input type="time" id="new-event-time" class="form-control" required step="900"> </div>
+                </div>
+                 <div class="form-group">
+                    <label class="form-label">Observações (Internas)</label>
+                    <textarea id="new-event-notes" class="form-control" rows="3"></textarea>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="new-event-modal-cancel" class="btn btn--outline">Cancelar</button>
+                <button type="submit" id="new-event-modal-save" class="btn btn--primary">Salvar Agendamento</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        
+        // --- VARIÁVEIS GLOBAIS DO CALENDÁRIO ---
+        let calendarEl = document.getElementById('calendar');
+        let calendar;
+        let adminDataCache = {
+            clientes: [],
+            profissionais: [],
+            servicos_e_tiers: []
+        };
+        let currentEditingEventId = null;
+
+        // --- MODAIS ---
+        const eventModal = document.getElementById('event-modal');
+        const newEventModal = document.getElementById('new-event-modal');
+
+        // --- FUNÇÕES DE HELPERS (População de Selects) ---
+        
+        /**
+         * Popula um <select> com dados
+         * @param {HTMLElement} selectEl - O elemento <select>
+         * @param {Array} data - A lista de objetos de dados
+         * @param {string} valueField - O nome do campo para o 'value' (ex: 'id')
+         * @param {string} textField - O nome do campo para o texto (ex: 'nome')
+         * @param {string} [prompt] - Texto inicial (ex: "Selecione...")
+         */
+        function populateSelect(selectEl, data, valueField, textField, prompt) {
+            selectEl.innerHTML = ''; // Limpa
+            if (prompt) {
+                selectEl.add(new Option(prompt, ""));
+            }
+            data.forEach(item => {
+                selectEl.add(new Option(item[textField], item[valueField]));
+            });
+        }
+
+        /**
+         * Filtra o <select> de profissionais baseado no serviço escolhido
+         * @param {HTMLElement} selectServico - O <select> de serviços
+         * @param {HTMLElement} selectProfissional - O <select> de profissionais
+         */
+        function filterProfissionaisPorServico(selectServico, selectProfissional) {
+            const selectedServicoId = selectServico.value;
+            const servico = adminDataCache.servicos_e_tiers.find(s => s.id === selectedServicoId);
+            const profissionalIds = servico ? servico.profissionais_ids : [];
+
+            // Guarda o valor que estava selecionado
+            const currentSelectedProfId = selectProfissional.value;
+
+            // Filtra a lista completa de profissionais
+            const profissionaisFiltrados = adminDataCache.profissionais.filter(p => 
+                profissionalIds.includes(p.id)
+            );
+
+            // Popula o select de profissionais
+            populateSelect(selectProfissional, profissionaisFiltrados, 'id', 'nome', "Selecione um profissional...");
+
+            // Tenta reselecionar o profissional que estava antes (se ele ainda for válido)
+            if (profissionaisFiltrados.some(p => p.id == currentSelectedProfId)) {
+                selectProfissional.value = currentSelectedProfId;
+            }
+        }
+
+
+        // --- FUNÇÕES DE DADOS ---
+
+        /**
+         * Busca os dados de clientes, serviços e profissionais da API
+         */
+        async function loadAdminFormData() {
+            try {
+                const response = await fetch('/api/admin/get-form-data/');
+                if (!response.ok) throw new Error('Falha ao carregar dados do formulário.');
+                adminDataCache = await response.json();
+            } catch (error) {
+                console.error(error);
+                alert("Erro crítico: Não foi possível carregar os dados para o agendamento.");
+            }
+        }
+
+        // --- FUNÇÕES DE INICIALIZAÇÃO DO FULLCALENDAR ---
+
+        function initializeCalendar() {
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: '' // Nossos botões customizados cuidam disso
+                },
+                locale: 'pt-br',
+                timeZone: 'local',
+                height: 'auto',
+                events: '/api/admin/agendamentos-calendario/',
+                
+                // --- TRADUÇÃO DOS BOTÕES (CORREÇÃO SOLICITADA) ---
+                buttonText: {
+                    today: 'Hoje',
+                    month: 'Mês',
+                    week: 'Semana',
+                    day: 'Dia',
+                    list: 'Lista'
+                },
+
+                // --- VISIBILIDADE DE EVENTOS CURTOS (CORREÇÃO SOLICITADA) ---
+                eventMinHeight: 45, // Força altura mínima em pixels (mesmo para 15 min)
+                slotEventOverlap: false, // Evita sobreposição para facilitar leitura
+                navLinks: true, // Permite clicar no número do dia para ir para a visão diária
+                
+                // --- PROPRIEDADES DE INTERAÇÃO ---
+                selectable: true,  // Permite clicar em dias vazios
+                editable: true,    // Permite arrastar eventos
+                
+                // --- HANDLERS ---
+                
+                // 1. Ao clicar em um dia vazio (ou selecionar vários)
+                select: handleDateSelect,
+                
+                // 2. Ao clicar em um evento existente
+                eventClick: handleEventClick,
+                
+                // 3. Ao soltar um evento (arrastar e soltar)
+                eventDrop: handleEventDrop,
+                
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                }
+            });
+            calendar.render();
+        }
+
+        // --- HANDLERS DO FULLCALENDAR ---
+
+        /**
+         * (Handler) Chamado ao clicar em um dia vazio no calendário
+         * @param {object} selectInfo - Informações da seleção (data/hora)
+         */
+        function handleDateSelect(selectInfo) {
+            const modal = document.getElementById('new-event-modal');
+            const form = document.getElementById('new-event-form');
+            form.reset(); // Limpa o formulário
+
+            // Preenche a data e hora de início
+            document.getElementById('new-event-date').value = selectInfo.startStr.split('T')[0];
+            
+            // Se a visão for de dia/semana, pega a hora
+            if (selectInfo.startStr.includes('T')) {
+                 document.getElementById('new-event-time').value = selectInfo.startStr.split('T')[1].substring(0, 5);
+            } else {
+                 document.getElementById('new-event-time').value = "09:00"; // Padrão
+            }
+
+            // Popula os dropdowns com dados do cache
+            const selectClient = document.getElementById('new-event-client');
+            const selectService = document.getElementById('new-event-service');
+            const selectProfessional = document.getElementById('new-event-professional');
+            
+            populateSelect(selectClient, adminDataCache.clientes, 'id', 'nome', "Selecione um cliente...");
+            populateSelect(selectService, adminDataCache.servicos_e_tiers, 'id', 'nome', "Selecione um serviço...");
+            populateSelect(selectProfessional, adminDataCache.profissionais, 'id', 'nome', "Selecione um profissional...");
+
+            // Filtra profissionais baseado no serviço (inicialmente vazio)
+            filterProfissionaisPorServico(selectService, selectProfessional);
+
+            // Abre o modal
+            modal.classList.remove('hidden');
+        }
+
+        /**
+         * (Handler) Chamado ao clicar em um evento existente
+         * @param {object} clickInfo - Informações do evento clicado
+         */
+        function handleEventClick(clickInfo) {
+            currentEditingEventId = clickInfo.event.id;
+            const eventData = clickInfo.event.extendedProps;
+            const start = clickInfo.event.start;
+            
+            // Popula os dropdowns com dados do cache
+            const selectClient = document.getElementById('event-edit-client');
+            const selectService = document.getElementById('event-edit-service');
+            const selectProfessional = document.getElementById('event-edit-professional');
+
+            populateSelect(selectClient, adminDataCache.clientes, 'id', 'nome', "Selecione um cliente...");
+            populateSelect(selectService, adminDataCache.servicos_e_tiers, 'id', 'nome', "Selecione um serviço...");
+            populateSelect(selectProfessional, adminDataCache.profissionais, 'id', 'nome', "Selecione um profissional...");
+
+            // --- Preenche o formulário com os dados do agendamento ---
+            
+            // Simples
+            document.getElementById('event-edit-status').value = eventData.status;
+            document.getElementById('event-edit-payment').value = eventData.status_pagamento;
+            document.getElementById('event-edit-notes').value = eventData.observacoes;
+            
+            // Data e Hora
+            document.getElementById('event-edit-date').value = start.toISOString().split('T')[0];
+            document.getElementById('event-edit-time').value = start.toTimeString().substring(0, 5);
+            
+            
+            // --- INÍCIO DA CORREÇÃO (Lógica de pré-seleção) ---
+            
+            // Cliente (continua adivinhando pelo nome, como antes)
+            const cliente = adminDataCache.clientes.find(c => c.nome === eventData.cliente);
+            if(cliente) selectClient.value = cliente.id;
+
+            // Serviço (USA O ID CORRETO enviado pela API)
+            if (eventData.servico_tier_id) {
+                selectService.value = eventData.servico_tier_id; // Ex: "tier_5" ou "service_1"
+                
+                // Filtra profissionais baseado no serviço selecionado
+                filterProfissionaisPorServico(selectService, selectProfessional);
+            }
+            
+            // Profissional (Ainda não temos o ID do profissional no extendedProps,
+            // então esta parte continua sem pré-seleção.)
+            
+            // --- FIM DA CORREÇÃO ---
+            
+            // Abre o modal
+            eventModal.classList.remove('hidden');
+        }
+
+        /**
+         * (Handler) Chamado ao arrastar e soltar um evento
+         * @param {object} dropInfo - Informações do evento e da nova data/hora
+         */
+        function handleEventDrop(dropInfo) {
+            const newStart = dropInfo.event.start;
+            const formattedDate = newStart.toLocaleDateString('pt-BR');
+            const formattedTime = newStart.toTimeString().substring(0, 5);
+
+                // Salva a mudança no backend
+                saveEventDrop(dropInfo.event);
+
+        }
+
+
+        // --- FUNÇÕES DE SALVAMENTO (API CALLS) ---
+
+        /**
+         * Salva as alterações de um agendamento (Modal de Edição)
+         */
+        async function saveUpdatedAppointment() {
+            const payload = {
+                cliente_id: document.getElementById('event-edit-client').value,
+                servico_tier_id: document.getElementById('event-edit-service').value,
+                profissional_id: document.getElementById('event-edit-professional').value,
+                data: document.getElementById('event-edit-date').value,
+                horario: document.getElementById('event-edit-time').value,
+                status: document.getElementById('event-edit-status').value,
+                status_pagamento: document.getElementById('event-edit-payment').value,
+                observacoes: document.getElementById('event-edit-notes').value,
+            };
+
+            // Validação simples
+            if (!payload.cliente_id || !payload.servico_tier_id || !payload.profissional_id || !payload.data || !payload.horario) {
+                alert("Por favor, preencha todos os campos (Cliente, Serviço, Profissional, Data e Hora).");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/atualizar-agendamento/${currentEditingEventId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+
+                alert(result.message);
+                eventModal.classList.add('hidden');
+                calendar.refetchEvents(); // Recarrega os eventos no calendário
+            } catch (error) {
+                alert(`Erro ao atualizar: ${error.message}`);
+            }
+        }
+        
+        /**
+         * Deleta um agendamento (Modal de Edição)
+         */
+        async function deleteAppointment() {
+            
+            try {
+                const response = await fetch(`/api/admin/deletar-agendamento/${currentEditingEventId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+
+                alert(result.message);
+                eventModal.classList.add('hidden');
+                calendar.refetchEvents(); // Recarrega os eventos
+            } catch (error) {
+                alert(`Erro ao excluir: ${error.message}`);
+            }
+        }
+
+        /**
+         * Salva o novo agendamento (Modal de Criação)
+         * @param {Event} e - Evento de submit do formulário
+         */
+        async function saveNewAppointment(e) {
+            e.preventDefault();
+            const payload = {
+                // Cliente (Depende da aba selecionada)
+                cliente_id: 'existing', // (será sobrescrito)
+                
+                // Dados do Agendamento
+                servico_tier_id: document.getElementById('new-event-service').value,
+                profissional_id: document.getElementById('new-event-professional').value,
+                data: document.getElementById('new-event-date').value,
+                horario: document.getElementById('new-event-time').value,
+                observacoes: document.getElementById('new-event-notes').value,
+            };
+
+            // Lógica do Cliente
+            const isNewClient = document.getElementById('panel-new-client').classList.contains('hidden') === false;
+            
+            if (isNewClient) {
+                payload.cliente_id = 'new';
+                payload.novo_cliente_nome = document.getElementById('new-client-nome').value;
+                payload.novo_cliente_sobrenome = document.getElementById('new-client-sobrenome').value;
+                payload.novo_cliente_telefone = document.getElementById('new-client-telefone').value.replace(/\D/g, '');
+                payload.novo_cliente_nascimento = document.getElementById('new-client-nascimento').value;
+                payload.novo_cliente_email = document.getElementById('new-client-email').value;
+                
+                if (!payload.novo_cliente_nome || !payload.novo_cliente_telefone || !payload.novo_cliente_nascimento) {
+                    alert("Para novos clientes, Nome, Telefone e Data de Nascimento são obrigatórios.");
+                    return;
+                }
+            } else {
+                payload.cliente_id = document.getElementById('new-event-client').value;
+                if (!payload.cliente_id) {
+                    alert("Por favor, selecione um cliente existente.");
+                    return;
+                }
+            }
+
+            // Validação final
+             if (!payload.servico_tier_id || !payload.profissional_id) {
+                alert("Por favor, selecione o serviço e o profissional.");
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/criar-agendamento/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+
+                alert(result.message);
+                newEventModal.classList.add('hidden');
+                calendar.refetchEvents(); // Recarrega os eventos
+                
+                // Se criamos um cliente novo, recarrega o cache de dados
+                if (isNewClient) {
+                    await loadAdminFormData();
+                }
+
+            } catch (error) {
+                alert(`Erro ao criar agendamento: ${error.message}`);
+            }
+        }
+
+        /**
+         * Salva a nova data/hora de um evento (Drag-and-Drop)
+         * @param {object} event - O objeto do evento do FullCalendar
+         */
+        async function saveEventDrop(event) {
+            const payload = {
+                start_iso: event.start.toISOString() // Envia a data/hora completa
+            };
+            
+            try {
+                const response = await fetch(`/api/admin/atualizar-horario-agendamento/${event.id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+
+                alert(result.message);
+                calendar.refetchEvents(); // Recarrega (para garantir consistência)
+            } catch (error) {
+                alert(`Erro ao remanejar: ${error.message}`);
+                event.revert(); // Desfaz a mudança visual no calendário
+            }
+        }
+
+        // --- LISTENERS DE INICIALIZAÇÃO E MODAIS ---
+        
+        // Botões de visualização do calendário
+        document.getElementById('btn-month').addEventListener('click', () => calendar.changeView('dayGridMonth'));
+        document.getElementById('btn-week').addEventListener('click', () => calendar.changeView('timeGridWeek'));
+        document.getElementById('btn-day').addEventListener('click', () => calendar.changeView('timeGridDay'));
+
+        // Botão "Novo Agendamento" (fora do calendário)
+        document.getElementById('btn-new-appointment').addEventListener('click', () => {
+             // Simula um clique no dia de hoje
+            const todayStr = new Date().toISOString().split('T')[0];
+            handleDateSelect({ startStr: todayStr });
+        });
+
+        // --- Listeners do Modal de EDIÇÃO ---
+        document.getElementById('event-modal-close').addEventListener('click', () => eventModal.classList.add('hidden'));
+        document.getElementById('event-modal-cancel').addEventListener('click', () => eventModal.classList.add('hidden'));
+        document.getElementById('event-modal-save').addEventListener('click', saveUpdatedAppointment);
+        document.getElementById('event-modal-delete').addEventListener('click', deleteAppointment);
+        document.getElementById('event-edit-service').addEventListener('change', (e) => {
+             filterProfissionaisPorServico(e.target, document.getElementById('event-edit-professional'));
+        });
+
+
+        // --- Listeners do Modal de CRIAÇÃO ---
+        document.getElementById('new-event-form').addEventListener('submit', saveNewAppointment);
+        document.getElementById('new-event-modal-close').addEventListener('click', () => newEventModal.classList.add('hidden'));
+        document.getElementById('new-event-modal-cancel').addEventListener('click', () => newEventModal.classList.add('hidden'));
+        
+        // Filtro de profissional no modal de criação
+        document.getElementById('new-event-service').addEventListener('change', (e) => {
+             filterProfissionaisPorServico(e.target, document.getElementById('new-event-professional'));
+        });
+
+        // Abas do modal de criação (Novo Cliente / Cliente Existente)
+        document.querySelectorAll('#new-event-modal .form-toggle .toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const toggle = e.target.closest('.form-toggle');
+                const panelContainer = e.target.closest('.modal-body');
+                
+                // Botões
+                toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Painéis
+                const targetPanelId = `panel-${e.target.dataset.tab}`;
+                panelContainer.querySelectorAll('.form-tab-panel').forEach(p => p.classList.add('hidden'));
+                document.getElementById(targetPanelId).classList.remove('hidden');
+
+                // Animação do toggle
+                toggle.classList.toggle('toggle-right', e.target.dataset.tab === 'new-client');
+                
+                // Gerencia 'required'
+                const isNewClient = e.target.dataset.tab === 'new-client';
+                document.getElementById('new-event-client').required = !isNewClient;
+                document.getElementById('new-client-nome').required = isNewClient;
+                document.getElementById('new-client-telefone').required = isNewClient;
+                document.getElementById('new-client-nascimento').required = isNewClient;
+                //document.getElementById('new-client-email').required = isNewClient;
+            });
+        });
+
+        // --- CARREGAMENTO INICIAL ---
+        await loadAdminFormData(); // Carrega os dados (clientes, etc.)
+        initializeCalendar();    // Inicia o calendário
+        
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,239 @@
+/* * Estilos para componentes genéricos em forma de "card".
+ * (Cards de serviço, profissional, aviso, etc. estão em arquivos separados)
+ */
+
+/* Card de Estado Vazio/Erro */
+.empty-state, .error-state {
+  text-align: center;
+  padding: var(--space-32);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.empty-icon, .error-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-16);
+  opacity: 0.8;
+}
+
+.empty-state h3, .error-state h3 {
+  margin-bottom: var(--space-12);
+}
+
+.empty-state p, .error-state p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-24);
+}
+
+/* Card de Informação de Serviço (usado no calendário/profissionais) */
+.service-info-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-16);
+    padding: var(--space-16);
+    border-radius: var(--radius-base);
+    box-shadow: var(--shadow-sm);
+    
+    /* --- MUDANÇAS AQUI --- */
+    background: var(--color-primary-light); /* Fundo suave  */
+    border: 1px solid var(--color-primary); /* Borda na cor primária */
+    /* --- FIM DA MUDANÇA --- */
+}
+
+.service-info-card .service-info-img {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    flex-shrink: 0; 
+}
+
+.service-info-card .service-icon {
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.service-info-card .service-details {
+    flex: 1;
+}
+
+.service-info-card .service-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    margin-top: var(--space-4);
+}
+
+/* Badge de Status (usado no card de agendamento) */
+.status {
+  display: inline-block;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.status--success {
+  background-color: var(--color-mint-green-light);
+  color: var(--color-mint-green-active);
+}
+
+.status--warning {
+  background-color: var(--color-orange-light);
+  color: var(--color-orange);
+}
+
+.status--danger {
+  background-color: var(--color-red-light);
+  color: var(--color-red);
+}
+
+/* Para status "Concluído" */
+.status--info {
+  background-color: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+/* Para status "Pendente" */
+.status--pending {
+  background-color: var(--color-light-gray);
+  color: var(--color-text-gray);
+  border: 1px solid var(--color-medium-gray);
+}
+
+/* * Estilos para componentes genéricos em forma de "card".
+ * (Cards de serviço, profissional, aviso, etc. estão em arquivos separados)
+ */
+
+/* Card de Estado Vazio/Erro */
+.empty-state, .error-state {
+  text-align: center;
+  padding: var(--space-32);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.empty-icon, .error-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-16);
+  opacity: 0.8;
+}
+
+.empty-state h3, .error-state h3 {
+  margin-bottom: var(--space-12);
+}
+
+.empty-state p, .error-state p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-24);
+}
+
+/* Card de Informação de Serviço (usado no calendário/profissionais) */
+.service-info-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-16);
+    padding: var(--space-16);
+    border-radius: var(--radius-base);
+    box-shadow: var(--shadow-sm);
+    
+    /* --- MUDANÇAS AQUI --- */
+    background: var(--color-primary-light);
+    /* Fundo suave  */
+    border: 1px solid var(--color-primary);
+    /* Borda na cor primária */
+    /* --- FIM DA MUDANÇA --- */
+}
+
+.service-info-card .service-info-img {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    flex-shrink: 0; 
+}
+
+.service-info-card .service-icon {
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.service-info-card .service-details {
+    flex: 1;
+}
+
+.service-info-card .service-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* <-- NOVO */
+    gap: var(--space-4) var(--space-12); /* <-- NOVO */
+    margin-top: var(--space-4);
+}
+
+/* --- INÍCIO DA NOVA ADIÇÃO --- */
+.service-info-card .service-price-signal {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    width: 100%; /* Faz quebrar a linha */
+    margin-top: 4px;
+}
+/* --- FIM DA NOVA ADIÇÃO --- */
+
+
+/* Badge de Status (usado no card de agendamento) */
+.status {
+  display: inline-block;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.status--success {
+  background-color: var(--color-mint-green-light);
+  color: var(--color-mint-green-active);
+}
+
+.status--warning {
+  background-color: var(--color-orange-light);
+  color: var(--color-orange);
+}
+
+.status--danger {
+  background-color: var(--color-red-light);
+  color: var(--color-red);
+}
+
+/* Para status "Concluído" */
+.status--info {
+  background-color: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+/* Para status "Pendente" */
+.status--pending {
+  background-color: var(--color-light-gray);
+  color: var(--color-text-gray);
+  border: 1px solid var(--color-medium-gray);
+}

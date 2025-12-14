@@ -1,0 +1,132 @@
+.screen {
+  display: none;
+  min-height: 100vh;
+  animation: fadeIn 0.5s ease-in-out;
+  padding-bottom: var(--space-64);
+}
+
+#home-screen {
+  padding-bottom: 0;
+}
+
+.screen.active {
+  display: block;
+}
+
+/* --- SEÇÃO MODIFICADA --- */
+
+/* * Cabeçalho das Telas (Layout de 3 Colunas)
+ * Col 1: Botão Voltar
+ * Col 2: Título (Centralizado)
+ * Col 3: Placeholder (Para balancear)
+*/
+.screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* MODIFICADO (era center ) */
+  margin-bottom: var(--space-32);
+  padding-top: var(--space-24);
+  /* position: relative; REMOVIDO  */
+}
+
+.screen-header .btn-back {
+  all: unset;
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  color: var(--color-text-gray);
+  display: inline-flex;
+  align-items: center;
+  transition: color var(--duration-fast) ease;
+  
+  /* NOVAS REGRAS (Substituindo o position: absolute ) */
+  flex-basis: 90px;
+  flex-shrink: 0;
+  justify-content: flex-start;
+}
+
+.btn-back svg {
+  margin-right: var(--space-4);
+  transition: transform var(--duration-fast) ease;
+}
+
+.btn-back:hover {
+  color: var(--color-dark-gray);
+}
+
+.btn-back:hover svg {
+  transform: translateX(-2px);
+}
+
+/* Título (Col 2) */
+.screen-header h2 {
+  position: relative; 
+  padding-bottom: var(--space-12);
+  font-size: var(--font-size-xl);
+  
+  /* --- MODIFICAÇÕES --- */
+  display: inline-block; /* ADICIONADO: Faz o H2 ter a largura do texto */
+  margin: 0 auto;       /* ADICIONADO: Centra o H2 (que agora é inline-block) no espaço flexível */
+}
+
+/* Espaçador (Col 3) */
+.header-placeholder {
+  flex-basis: 90px; /* Deve ter a mesma largura do .btn-back */
+  flex-shrink: 0;
+}
+
+/* --- FIM DA SEÇÃO MODIFICADA --- */
+
+
+.screen-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0; 
+  width: 100%;
+  height: 3px; 
+  background-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.6s var(--ease-standard);
+}
+
+.screen.active .screen-header h2::after {
+  animation: growUnderline 0.7s var(--ease-standard) 0.2s forwards;
+}
+
+
+/* 5. Ajustes para o mobile */
+@media (max-width: 768px) {
+  
+  /* --- SEÇÃO MODIFICADA --- */
+  
+  /* * A REGRA QUE ESCONDIA O BOTÃO FOI REMOVIDA 
+  */
+  
+  .screen-header {
+     align-items: center;
+  }
+  
+  /* Diminui a base do botão (só ícone) */
+  .screen-header .btn-back {
+    flex-basis: 40px; 
+    font-size: 0; /* Esconde texto que não está no span */
+  }
+
+  /* Esconde o <span> "Voltar" */
+  .screen-header .btn-back span {
+    display: none;
+  }
+
+  /* Diminui a base do placeholder */
+  .header-placeholder {
+    flex-basis: 40px;
+  }
+  
+  /* --- FIM DA SEÇÃO MODIFICADA --- */
+  
+  .screen-header h2 {
+    font-size: var(--font-size-lg);
+  }
+}

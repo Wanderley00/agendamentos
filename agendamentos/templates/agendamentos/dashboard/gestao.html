@@ -1,0 +1,731 @@
+{% extends 'agendamentos/dashboard/base.html' %}
+{% load static %}
+
+{% block dashboard_content %}
+<h1>Gestão do Negócio</h1>
+
+<div class="dashboard-tabs">
+    <button class="tab-btn active" data-tab="categorias">Categorias</button>
+    <button class="tab-btn" data-tab="servicos">Serviços</button>
+    <button class="tab-btn" data-tab="equipe">Equipe</button>
+    <button class="tab-btn" data-tab="horarios">Meus Horários</button>
+    <button class="tab-btn" data-tab="avisos">Mural de Avisos</button>
+    <button class="tab-btn" data-tab="configuracoes">Configurações</button>
+</div>
+
+<div class="tab-content" id="tab-categorias">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">
+            Categorias de Serviços
+        </div>
+        <div class="dashboard-card-body">
+            <p class="text-secondary mb-4">Gerencie as categorias (ex: Cílios, Unhas) para agrupar serviços e manutenções.</p>
+            
+            <form id="form-add-categoria" class="form-add-lista mb-4">
+                <input type="text" class="form-control" id="categoria-nome-input" placeholder="Nome da nova categoria" required>
+                <button type="submit" class="btn btn--primary btn--sm">Adicionar</button>
+            </form>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome da Categoria</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categorias-lista-tbody">
+                        <tr><td colspan="2">Carregando categorias...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content hidden" id="tab-servicos">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">
+            Meus Serviços
+            <button id="btn-novo-servico" class="btn btn--primary btn--sm">Novo Serviço</button>
+        </div>
+        <div class="dashboard-card-body">
+            <p class="text-secondary mb-4">Adicione, edite ou remova os serviços oferecidos pelo seu negócio.</p>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Categoria</th>
+                            <th>Preço</th>
+                            <th>Duração</th>
+                            <th>Profissionais</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servicos-lista-tbody">
+                        <tr><td colspan="6">Carregando serviços...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content hidden" id="tab-equipe">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">
+            Minha Equipe
+            <button id="btn-convidar-membro" class="btn btn--primary btn--sm">Convidar Membro</button>
+        </div>
+        <div class="dashboard-card-body">
+            <p class="text-secondary mb-4">Gerencie quem pode acessar este dashboard e executar serviços.</p>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="equipe-lista-tbody">
+                        <tr><td colspan="3">Carregando equipe...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content hidden" id="tab-horarios">
+    
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">
+            Meus Horários de Trabalho
+        </div>
+        <div class="dashboard-card-body">
+            <p class="text-secondary mb-4">
+                Defina seus blocos de trabalho para cada dia da semana.
+                O sistema usará esses horários para calcular sua disponibilidade.
+            </p>
+            <div id="horarios-semana-container">
+                </div>
+        </div>
+    </div> <div class="dashboard-card" style="margin-top: 1.5rem;">
+        <div class="dashboard-card-title">
+            Folgas e Dias Bloqueados
+        </div>
+        <div class="dashboard-card-body">
+            <p class="text-secondary mb-4">
+                Adicione dias específicos que você não irá trabalhar (feriados, férias, etc.).
+                Isso irá sobrepor seus horários recorrentes.
+            </p>
+            <form id="form-add-bloqueio" class="form-add-lista">
+                <input type="date" class="form-control" id="bloqueio-data" style="width: 150px;" required>
+                <input type="text" class="form-control" id="bloqueio-descricao" placeholder="Descrição (ex: Feriado)">
+                <button type="submit" class="btn btn--primary btn--sm">Bloquear Dia</button>
+            </form>
+            <div id="lista-dias-bloqueados" class="lista-preview" style="margin-top: 1rem;">
+                <p>Carregando bloqueios...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content hidden" id="tab-configuracoes">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">
+            Configurações da Marca
+        </div>
+        <div class="dashboard-card-body">
+            <p class="text-secondary mb-4">
+                Personalize o nome, a tagline e as cores do seu site de agendamento.
+            </p>
+            
+            <form id="config-form">
+            
+                <div class="form-group">
+                    <label class="form-label" for="config-nome-negocio">Nome do Negócio (Texto do Logo)</label>
+                    <input type="text" class="form-control" id="config-nome-negocio" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Logo Atual</label>
+                                <div id="logo-preview-container" class="mt-4" style="display: block;">
+                        <img id="logo-preview" alt="Preview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 1px solid var(--color-border);">
+                    </div>
+                                <input type="file" id="config-logo-input" accept="image/png, image/jpeg, image/webp" style="display: none;">
+                                      <button type="button" id="btn-change-logo" class="btn btn--outline btn--sm" style="margin-top: 1rem;">
+                        Alterar Imagem
+                    </button>
+                                 <button type="button" id="btn-revert-logo" class="btn btn--outline btn--sm" style="margin-top: 1rem; margin-left: 8px; display: none;">
+                        Desfazer
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="config-tagline">Tagline (Frase abaixo do logo)</label>
+                    <input type="text" class="form-control" id="config-tagline">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="config-portfolio-url">Link do Portfólio Externo</label>
+                    <input type="url" class="form-control" id="config-portfolio-url" placeholder="https://www.canva.com/seu-link...">
+                    <small class="form-text">Cole aqui o link do seu portfólio (Canva, site, etc.). Ele será exibido em um modal no seu site.</small>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="config-cor-primaria">Cor Primária</label>
+                                        <input type="text" class="form-control" id="config-cor-primaria" data-coloris>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="config-cor-secundaria">Cor Secundária</label>
+                                        <input type="text" class="form-control" id="config-cor-secundaria" data-coloris>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="config-endereco">Endereço do Estabelecimento</label>
+                    <input type="text" class="form-control" id="config-endereco" placeholder="Ex: Av. Paulista, 1000 - São Paulo">
+                    <small class="form-text">Deixe em branco para ocultar o botão de mapa.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="config-telefone-contato">WhatsApp de Contato (Público)</label>
+                    <input type="text" class="form-control" id="config-telefone-contato" placeholder="Ex: 11999999999">
+                    <small class="form-text">Número que aparecerá no botão de "Entrar em Contato".</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="config-dias-antecedencia">Janela de Agendamento (em dias)</label>
+                    <input type="number" class="form-control" id="config-dias-antecedencia" min="1" max="365">
+                    <small class="form-text">Por quantos dias no futuro os clientes podem agendar? (Ex: 60 dias)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="config-pagamento-online">Pagamentos Online (Pix)</label>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="config-pagamento-online">
+                        <label for="config-pagamento-online" class="slider"></label>
+                    </div>
+                    <small class="form-text">Habilita a cobrança de adiantamento via Pix no agendamento do cliente.</small>
+                </div>
+                
+                <div class="modal-footer" style="padding: 0; margin-top: 1.5rem;">
+                    <button type="submit" id="config-save" class="btn btn--primary">Salvar Configurações</button>
+                </div>   
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content hidden" id="tab-avisos">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">
+            Mural de Avisos
+            <button id="btn-novo-aviso" class="btn btn--primary btn--sm">Novo Aviso</button>
+        </div>
+        <div class="dashboard-card-body">
+            <p class="text-secondary mb-4">
+                Crie e gerencie os avisos que seus clientes verão antes de agendar.
+            </p>
+            <div id="avisos-lista-container">
+                <p>Carregando avisos...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="aviso-modal" class="modal-container hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="aviso-modal-title">Novo Aviso</h3>
+            <button id="aviso-modal-close" class="modal-close">&times;</button>
+        </div>
+        <form id="aviso-form">
+            <input type="hidden" id="aviso-id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="aviso-titulo">Título do Aviso</label>
+                    <input type="text" class="form-control" id="aviso-titulo" required placeholder="Ex: Política de Cancelamento">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="aviso-conteudo">Conteúdo do Aviso</label>
+                                         <textarea class="form-control" id="aviso-conteudo" rows="7" 
+                              placeholder="Digite seu aviso aqui.&#10;Para criar uma lista, basta pular uma linha.&#10;&#10;Exemplo:&#10;Item 1&#10;Item 2&#10;Item 3"></textarea>
+                                       <small class="form-text">Para criar uma lista, basta pular uma linha para cada item.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="aviso-ordem">Ordem (0 aparece primeiro)</label>
+                    <input type="number" class="form-control" id="aviso-ordem" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="aviso-modal-delete" class="btn btn--outline" style="color: #FF5A5F; border-color: #FF5A5F; margin-right: auto;">Excluir</button>
+                <button type="button" id="aviso-modal-cancel" class="btn btn--outline">Cancelar</button>
+                <button type="submit" id="aviso-modal-save" class="btn btn--primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+<style>
+    .aviso-card {
+        background: var(--color-light-gray);
+        border-radius: var(--radius-base);
+        padding: var(--space-16);
+        margin-bottom: var(--space-16);
+    }
+    .aviso-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--color-medium-gray);
+        padding-bottom: var(--space-12);
+        margin-bottom: var(--space-12);
+    }
+    .aviso-card-header h4 {
+        margin: 0;
+    }
+    
+.aviso-card-body ul {
+        margin: 0;
+        padding-left: var(--space-20);
+    }
+</style>
+
+<style>
+    .dia-semana-bloco {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--color-light-gray);
+        padding-bottom: 1.5rem;
+    }
+    .dia-semana-bloco h4 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    .horario-slot-lista {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+    .horario-slot-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--color-light-gray);
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-base);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .horario-slot-item button {
+        background: none;
+        border: none;
+        color: var(--color-red);
+        font-size: 1.25rem;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    .horario-slot-item button:hover {
+        opacity: 1;
+    }
+    .form-add-horario {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    .form-add-horario input[type="time"] {
+        width: 100px;
+        padding: 0.5rem;
+    }
+    .form-add-horario button {
+        padding: 0.6rem 1rem;
+    }
+</style>
+
+
+<div id="servico-modal" class="modal-container hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="servico-modal-title">Novo Serviço</h3>
+            <button id="servico-modal-close" class="modal-close">&times;</button>
+        </div>
+        <form id="servico-form">
+            <input type="hidden" id="servico-id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="servico-nome">Nome do Serviço</label>
+                    <input type="text" class="form-control" id="servico-nome" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="servico-preco">Preço (R$)</label>
+                        <input type="number" class="form-control" id="servico-preco" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="servico-duracao">Duração (minutos)</label>
+                        <input type="number" class="form-control" id="servico-duracao" step="15" min="0" required>
+                    </div>
+                    <div class="form-group form-group-percentual" style="display: none;"> <label class="form-label" for="servico-percentual">Adiantamento (%)</label>
+                        <input type="number" class="form-control" id="servico-percentual" step="1" min="0" max="100" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="servico-descricao">Descrição</label>
+                    <textarea class="form-control" id="servico-descricao" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Imagem do Serviço</label>
+                    <input type="file" id="servico-imagem-input" accept="image/png, image/jpeg, image/webp" style="display: none;">
+
+                    <div id="servico-preview-container" class="mt-4" style="display: block; width: 150px; height: 150px; overflow: hidden; border-radius: 50%; border: 1px solid var(--color-border);">
+                        <img id="servico-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACoCAMAAABt9SM9AAAAFVBMVEXe3t7e3t7e3t7e3t7e3t7e3t7e3t7e3t49nE3IAAABGklEQVR42u3Y2w6DIAwEUBWChv7/l7sIIbFpZ/rQ3pnOvNYA8BwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAECc3Z99V/f41lBxLzL38x/3c5QkS93sQ0x1d3sA+8L1kE/v9sO9AF9KthpY9r87oAvJjoYWPb/u6APyY6GFjWf/ugP8kOxhY9v+7ow/IjoYWPb/u6APyY6GFjWf/ugP8kOxhY9v+7ow/IjoYWPb/u6APyY6GFjWf/ugP8kOxhY9v+7ow/IjoYWPb/u6APyY6GFjWf/ugP8kOxhY9v+7ow/IjseWE095mNnN59mfePZzcT0/oA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAODf/QBt4ANrBw1qfAAAAABJRU5ErkJggg==" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+
+                    <button type="button" id="btn-change-servico-img" class="btn btn--outline btn--sm" style="margin-top: 1rem;">
+                        Alterar Imagem
+                    </button>
+                    <button type="button" id="btn-revert-servico-img" class="btn btn--outline btn--sm" style="margin-top: 1rem; margin-left: 8px; display: none;">
+                        Desfazer
+                    </button>
+                </div>
+                <div id="service-cropper-modal" class="modal-container hidden">
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h3>Ajustar Imagem do Serviço</h3>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-secondary mb-4">
+                                Use o mouse (ou os dedos) para dar zoom e mover a imagem.
+                            </p>
+                            <div class="img-container" style="width: 100%; height: 400px; background: #f7f7f7;">
+                                <img id="service-cropper-image" src="" alt="Imagem para cortar" style="display: block; max-width: 100%;">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="service-cropper-cancel" class="btn btn--outline">Cancelar</button>
+                            <button type="button" id="service-cropper-save" class="btn btn--primary">Salvar Corte</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="servico-categoria">Categoria</label>
+                    <select id="servico-categoria" class="form-control">
+                        <option value="">(Nenhuma)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="servico-profissionais-flags">Profissionais que executam este serviço</label>
+                    <div id="servico-profissionais-flags" class="flags-container">
+                        </div>
+                    </div>
+                </div>
+            <div class="modal-footer">
+                <button type="button" id="servico-modal-delete" class="btn btn--outline" style="color: #FF5A5F; border-color: #FF5A5F; margin-right: auto;">Excluir</Vbutton>
+                <button type="button" id="servico-modal-cancel" class="btn btn--outline">Cancelar</button>
+                <button type="submit" id="servico-modal-save" class="btn btn--primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="categoria-modal" class="modal-container hidden">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="categoria-modal-title">Editar Categoria</h3>
+            <button id="categoria-modal-close" class="modal-close">&times;</button>
+        </div>
+        <form id="categoria-edit-form">
+            <input type="hidden" id="categoria-edit-id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="categoria-edit-nome">Nome da Categoria</label>
+                    <input type="text" class="form-control" id="categoria-edit-nome" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="categoria-modal-delete" class="btn btn--outline" style="color: #FF5A5F; border-color: #FF5A5F; margin-right: auto;">Excluir</button>
+                <button type="button" id="categoria-modal-cancel" class="btn btn--outline">Cancelar</button>
+                <button type="submit" class="btn btn--primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="equipe-modal" class="modal-container hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="equipe-modal-title">Convidar Novo Membro</h3>
+            <button id="equipe-modal-close" class="modal-close">&times;</button>
+        </div>
+        <form id="equipe-form">
+            <div class="modal-body">
+                <p class="text-secondary mb-4">
+                    Você está criando uma nova conta de funcionário. Esta pessoa poderá acessar o dashboard e ser associada a serviços.
+                </p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="equipe-nome">Nome</label>
+                        <input type="text" class="form-control" id="equipe-nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="equipe-sobrenome">Sobrenome</label>
+                        <input type="text" class="form-control" id="equipe-sobrenome">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="equipe-email">Email</label>
+                    <input type="email" class="form-control" id="equipe-email" required>
+                </div>
+                 <div class="form-group">
+                    <label class="form-label" for="equipe-telefone">Telefone (Opcional)</label>
+                    <input type="tel" class="form-control" id="equipe-telefone">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="equipe-foto">Foto do Profissional (Opcional)</label>
+                    <input type="file" class="form-control" id="equipe-foto" accept="image/png, image/jpeg, image/webp">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="equipe-password">Senha Inicial</label>
+                    <input type="password" class="form-control" id="equipe-password" required>
+                    <small class="form-text">Crie uma senha temporária. O membro poderá alterá-la depois.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="equipe-modal-cancel" class="btn btn--outline">Cancelar</button>
+                <button type="submit" id="equipe-modal-save" class="btn btn--primary">Salvar e Convidar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="equipe-edit-modal" class="modal-container hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="equipe-edit-modal-title">Editar Membro</h3>
+            <button id="equipe-edit-modal-close" class="modal-close">&times;</button>
+        </div>
+        <form id="equipe-edit-form">
+            <input type="hidden" id="equipe-edit-id">
+            
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="equipe-edit-nome">Nome</label>
+                        <input type="text" class="form-control" id="equipe-edit-nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="equipe-edit-sobrenome">Sobrenome</label>
+                        <input type="text" class="form-control" id="equipe-edit-sobrenome">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="equipe-edit-email">Email (Não pode ser alterado)</label>
+                    <input type="email" class="form-control" id="equipe-edit-email" readonly style="background-color: var(--color-gray-50);">
+                </div>
+                 <div class="form-group">
+                    <label class="form-label" for="equipe-edit-telefone">Telefone</label>
+                    <input type="tel" class="form-control" id="equipe-edit-telefone">
+                </div>
+
+                <div class="form-group" style="background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <label class="form-label" for="equipe-edit-mp-token" style="color: #166534;">Token de Acesso (Mercado Pago)</label>
+                    <input type="text" class="form-control" id="equipe-edit-mp-token" placeholder="APP_USR-..." style="border-color: #86efac;">
+                    <small class="form-text" style="color: #166534;">
+                        Insira o "Access Token" de produção da sua conta Mercado Pago. 
+                        <span id="mp-token-status" style="font-weight: bold; margin-left: 5px;"></span>
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Foto do Profissional</label>
+                    <div id="equipe-edit-preview-container" class="mt-4" style="display: block; width: 100px; height: 100px; overflow: hidden; border-radius: 50%; border: 1px solid var(--color-border); margin-bottom: 1rem;">
+                        <img id="equipe-edit-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAACWCAMAAAAL3woPAAAAFVBMVEXe3t7e3t7e3t7e3t7e3t7e3t7e3t7e3t49nE3IAAAAB3RSTlMAgICAgICA+b2dYwAAAUdJREFUeNrt29lqwzAQRcGqIAj//5c+ClqgImga6c2cE3sIqRSPbYIgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgG/uPzG3fbd/tzbZ8gJ2rln1Gq5yR6/hL6rLvyRPL0TveDqA6c6T61T5E6vY/sL7I6mBj2f7ujn8kOxpY9v+7ox/JjoYWPb/u6MfyY6GFjW/7ujH8mOhhY1v+7ox/JjoYWNb/u6MfyY6GFjW/7ujH8mOhhY1v+7ox/JjoYWNb/u6MfyY6GFjW/7ujH8mOhhY1v+7ox/JjoYWPb/u6APyY6GFjWf/ugP8kOxhY9v+7ow/IjoYWPb/u6APyY6GFjWf/ugP8kOxhY9v+7ow/IjoYWPb/u6APyY6GFjWf/ugP8kOxhY9v+7ow/IjseWE495nNnN59mfePZzcT0/oA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAODf/QBt4ANrBw1qfAAAAABJRU5ErkJggg==" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <input type="file" id="equipe-edit-foto-input" accept="image/png, image/jpeg, image/webp" style="display: none;">
+                    <button type="button" id="btn-change-equipe-img" class="btn btn--outline btn--sm">
+                        Alterar Foto
+                    </button>
+                    </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="equipe-edit-password">Nova Senha (Opcional)</label>
+                    <input type="password" class="form-control" id="equipe-edit-password" placeholder="Deixe em branco para não alterar">
+                    <small class="form-text">Se preenchido, a senha do membro será redefinida.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="equipe-edit-modal-delete" class="btn btn--outline" style="color: #FF5A5F; border-color: #FF5A5F; margin-right: auto;">Excluir Membro</button>
+                <button type="button" id="equipe-edit-modal-cancel" class="btn btn--outline">Cancelar</button>
+                <button type="submit" id="equipe-edit-modal-save" class="btn btn--primary">Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="manutencao-modal" class="modal-container hidden">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3 id="manutencao-modal-title">Preços de Manutenção</h3>
+            <button id="manutencao-modal-close" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="text-secondary mb-4">
+                Gerencie a manutenção para o serviço: <strong id="manutencao-servico-nome" style="color: var(--color-primary);"></strong>.
+            </p>
+            
+            <form id="form-add-manutencao" class="form-add-manutencao" style="margin-bottom: 24px;">
+                <div class="manutencao-form-grid">
+                    <div class="form-group" style="flex: 2;">
+                        <label class="form-label" for="manutencao-nome">Nome da manutenção</label>
+                        <input type="text" class="form-control" id="manutencao-nome" placeholder="Ex: Manutenção 15 dias" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="manutencao-dias-min">Dias Min</label>
+                        <input type="number" class="form-control" id="manutencao-dias-min" placeholder="Ex: 15" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="manutencao-dias-max">Dias Max</label>
+                        <input type="number" class="form-control" id="manutencao-dias-max" placeholder="Ex: 20" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="manutencao-preco">Preço (R$)</label>
+                        <input type="number" class="form-control" id="manutencao-preco" step="0.01" placeholder="Ex: 85.00" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="manutencao-duracao">Duração (min)</label>
+                        <input type="number" class="form-control" id="manutencao-duracao" step="15" placeholder="Ex: 45" min="0" required>
+                    </div>
+                    <div class="form-group form-group-percentual" style="display: none;"> <label class="form-label" for="manutencao-percentual">Adiant. (%)</label>
+                        <input type="number" class="form-control" id="manutencao-percentual" step="1" min="0" max="100" value="0">
+                    </div>
+                    <div class="form-group" style="align-self: flex-end;">
+                        <button type="submit" class="btn btn--primary" style="width: 100%;">Adicionar</button>
+                    </div>
+                </div>
+            </form>
+            
+            <div id="manutencao-lista" class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome do Tier</th>
+                            <th>Dias Min</th>
+                            <th>Dias Max</th>
+                            <th>Preço</th>
+                            <th>Duração</th>
+                            <th class="col-percentual" style="display: none;">Adiant. (%)</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manutencao-lista-tbody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="manutencao-modal-cancel" class="btn btn--outline">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div id="cropper-modal" class="modal-container hidden">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3>Ajustar Imagem da Logo</h3>
+            </div>
+        <div class="modal-body">
+            <p class="text-secondary mb-4">
+                Use o mouse (ou os dedos) para dar zoom e mover a imagem.
+</p>
+            <div class_="img-container" style="width: 100%; height: 400px; background: #f7f7f7;">
+                <img id="cropper-image" src="" alt="Imagem para cortar" style="display: block; max-width: 100%;">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="cropper-cancel" class="btn btn--outline">Cancelar</button>
+            <button type="button" id="cropper-save" class="btn btn--primary">Salvar Corte</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-add-manutencao .manutencao-form-grid {
+    display: grid;
+    /* Padrão (Sem PIX): 6 colunas: Nome(2fr), Min, Max, Preço, Duração, Botão */
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+    gap: var(--space-12);
+    /* ISSO CORRIGE O DESALINHAMENTO: Alinha todos os inputs pela parte de baixo */
+    align-items: flex-end; 
+}
+
+.form-add-manutencao .form-group {
+    margin-bottom: 0;
+    width: 100%; /* Garante que o input ocupe a célula */
+}
+
+/* Deixa o layout responsivo */
+@media (max-width: 992px) {
+    .form-add-manutencao .manutencao-form-grid {
+        /* Quebra em 3 colunas em telas médias */
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items: flex-start; /* Reseta alinhamento no mobile */
+    }
+    .form-add-manutencao .form-group {
+        margin-bottom: var(--space-12);
+    }
+    /* O botão deve ocupar a linha toda no mobile */
+    .form-add-manutencao .form-group:last-child {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .form-add-manutencao .manutencao-form-grid {
+        /* Empilha tudo no mobile pequeno */
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Adicione no bloco de <style> do gestao.html */
+.form-horario-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Duas colunas principais */
+    gap: 10px;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+.horario-group {
+    display: flex;
+    flex-direction: column;
+}
+.horario-group label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 2px;
+}
+.horario-inputs {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.btn-add-horario {
+    grid-column: 1 / -1; /* Botão ocupa a largura total */
+    margin-top: 5px;
+    width: 100%;
+}
+</style>
+{% endblock %}
+
+{% block dashboard_js %}
+<script src="{% static 'js/gestao.js' %}"></script>
+{% endblock %}

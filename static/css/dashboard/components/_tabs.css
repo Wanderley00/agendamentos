@@ -1,0 +1,37 @@
+/* static/css/dashboard/components/_tabs.css */
+
+.dashboard-tabs, .report-filters {
+  display: flex;
+  flex-wrap: wrap; /* Permite quebrar linha no mobile */
+  background-color: transparent;
+  padding: 0;
+  margin-bottom: var(--space-20);
+  border-bottom: 2px solid var(--color-gray-100);
+}
+
+.tab-btn, .filter-btn {
+  flex: 0;
+  padding: var(--space-12) var(--space-16);
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-gray-500);
+  transition: var(--transition-fast);
+  margin-bottom: -2px; /* Puxa para baixo para tocar a borda */
+  border-bottom: 2px solid transparent;
+}
+.tab-btn:hover, .filter-btn:hover {
+  color: var(--color-gray-700);
+}
+
+.tab-btn.active, .filter-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.tab-content {
+  animation: fadeIn 0.3s ease;
+}

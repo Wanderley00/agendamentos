@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  web:
+    # Constrói a imagem usando o Dockerfile no diretório atual
+    build: .
+    
+    # Nome do container (opcional, mas bom para organização)
+    container_name: bella_designer_web
+
+    # Comando para iniciar o servidor
+    # 1. Coleta todos os arquivos estáticos (CSS, JS)
+    # 2. Inicia o Gunicorn na porta 8007
+    command: sh -c "python manage.py collectstatic --noinput && gunicorn bella_designer.wsgi:application --bind 0.0.0.0:8007"
+    
+    volumes:
+      # 1. Banco de Dados:
+      # Monta o seu db.sqlite3 local no container.
+      # ISSO GARANTE QUE VOCÊ ESTÁ USANDO SEU BANCO EXISTENTE E QUE ELE É PERSISTENTE.
+      - ./db.sqlite3:/app/db.sqlite3
+      
+      # 2. Arquivos de Mídia (Logos, fotos de serviços, etc.):
+      # Monta a pasta 'media' local no container.
+      - ./media:/app/media
+      
+      # 3. Arquivos Estáticos (CSS, JS):
+      # Cria um volume gerenciado pelo Docker para os arquivos coletados.
+      - static_volume:/app/staticfiles
+      
+    ports:
+      # Mapeia a porta 8007 do seu VPS (host) para a porta 8007 do container
+      - "8007:8007"
+      
+    expose:
+      # Expõe a porta 8007 internamente
+      - 8007
+      
+    # ADICIONADO: Carrega seu arquivo .env (para chaves de API, etc.)
+    env_file:
+      - .env
+
+    restart: always
+
+  # --- NOVO SERVIÇO ADICIONADO ---
+  scheduler:
+    # Usa a MESMA imagem Docker que o serviço 'web'
+    build: .
+    container_name: bella_designer_scheduler
+    
+    # Comando que roda em loop infinito
+    command: >
+      sh -c "echo 'Iniciando o agendador de limpeza...' &&
+             while true; do
+               echo '[Scheduler] Executando cleanup_pending_bookings...';
+               python manage.py cleanup_pending_bookings;
+               echo '[Scheduler] Limpeza concluída. Aguardando 5 minutos...';
+               sleep 120;
+             done"
+
+    volumes:
+      # DEVE ter acesso ao mesmo banco de dados
+      - ./db.sqlite3:/app/db.sqlite3
+      
+    # DEVE ter acesso às mesmas variáveis de ambiente
+    env_file:
+      - .env
+
+    # Reinicia o serviço se ele falhar
+    restart: always
+
+# Define o volume para os arquivos estáticos
+volumes:
+  static_volume:

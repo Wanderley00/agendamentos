@@ -1,0 +1,101 @@
+<div id="payment-screen" class="screen">
+    <div class="container" style="max-width: 500px;">
+        <div class="screen-header">
+            <div class="header-placeholder"></div>
+            <h2>Confirme seu Agendamento</h2>
+            <div class="header-placeholder"></div>
+        </div>
+
+        <div class.payment-container">
+            <div class="warning-card" style="border-color: var(--color-primary); margin-bottom: 24px;">
+                <div class="warning-icon" style="color: var(--color-primary);">⏳</div>
+                <h3>Quase lá! Pague para confirmar.</h3>
+                <p class="text-secondary" style="font-size: 1.1rem; line-height: 1.6;">
+                    Seu horário está reservado. Realize o pagamento do adiantamento via PIX para confirmar.
+                </p>
+                <div class="payment-timer" id="payment-timer-display">
+                    Reservado por: <span>05:00</span>
+                </div>
+            </div>
+
+            <div class="pix-container">
+                <div class="pix-qr-code">
+                    <img id="payment-qr-code-img" src="" alt="PIX QR Code">
+                </div>
+                
+                <p class="text-secondary text-center" style="margin-top: 16px;">
+                    Use o app do seu banco para ler o QR Code
+                </p>
+
+                <div class="pix-copy-paste">
+                    <label class="form-label" for="payment-qr-code-text">Ou copie o código PIX:</label>
+                    <div class="copy-input-group">
+                        <input type="text" id="payment-qr-code-text" class="form-control" readonly>
+                        <button id="btn-copy-pix" class="btn btn--outline">Copiar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-footer">
+                <p class="text-secondary" style="font-size: 0.9rem; text-align: center;">
+                    Estamos aguardando a confirmação do pagamento...
+                </p>
+                <div class="loading-indicator" style="margin-top: 16px;">
+                    <div class="loading-spinner small"></div>
+                    <p>Verificando status...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-container {
+    animation: fadeIn 0.5s ease;
+}
+
+.payment-timer {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-dark-gray);
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--color-light-gray);
+    border-radius: var(--radius-base);
+}
+.payment-timer span {
+    color: var(--color-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.pix-container {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.pix-qr-code {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+.pix-qr-code img {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-base);
+}
+
+.copy-input-group {
+    display: flex;
+    gap: 8px;
+}
+.copy-input-group input {
+    flex: 1;
+    font-size: 0.9rem;
+    background: var(--color-light-gray);
+}
+</style>

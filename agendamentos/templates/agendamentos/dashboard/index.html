@@ -1,0 +1,235 @@
+<!-- templates/agendamentos/dashboard/index.html -->
+{% extends 'agendamentos/dashboard/base.html' %}
+
+{% block dashboard_content %}
+<h1>Dashboard</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-title">Agendamentos Hoje</div>
+        <div class="stat-value">{{ agendamentos_hoje }}</div>
+        <div class="stat-description">Total de agendamentos para hoje</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-title">Agendamentos Confirmados</div>
+        <div class="stat-value">{{ agendamentos_pendentes }}</div>
+        <div class="stat-description">Agendamentos futuros confirmados</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-title">Pagamentos Pendentes</div>
+        <div class="stat-value">{{ pagamentos_pendentes }}</div>
+        <div class="stat-description">Clientes que ainda não pagaram</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-title">Faturamento do Mês</div>
+        <div class="stat-value">R$ {{ faturamento_mes|floatformat:2 }}</div>
+        <div class="stat-description">Total faturado neste mês</div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">Resumo Financeiro</div>
+        <div class="dashboard-card-body">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <div>
+                    <div style="color: var(--color-text-secondary); font-size: 0.875rem;">Faturamento</div>
+                    <div style="font-size: 1.25rem; font-weight: var(--font-weight-bold);">R$ {{ faturamento_mes|floatformat:2 }}</div>
+                </div>
+                <div>
+                    <div style="color: var(--color-text-secondary); font-size: 0.875rem;">Despesas</div>
+                    <div style="font-size: 1.25rem; font-weight: var(--font-weight-bold);">R$ {{ despesas_mes|floatformat:2 }}</div>
+                </div>
+                <div>
+                    <div style="color: var(--color-text-secondary); font-size: 0.875rem;">Lucro</div>
+                    <div style="font-size: 1.25rem; font-weight: var(--font-weight-bold); color: {% if lucro_mes|add:0 >= 0 %}var(--color-mint-green){% else %}var(--color-red){% endif %};">
+                        R$ {{ lucro_mes|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="financialChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">Próximos Agendamentos</div>
+        <div class="dashboard-card-body">
+            <div id="upcoming-appointments">Carregando...</div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-title">Atividade Recente</div>
+    <div class="dashboard-card-body">
+        <div id="recent-activity">Carregando...</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Gráfico Financeiro Estilizado ---
+        const ctx = document.getElementById('financialChart').getContext('2d');
+        
+        // Criar gradiente
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(13, 153, 255, 0.5)'); // Azul
+        gradient.addColorStop(1, 'rgba(13, 153, 255, 0.05)');
+
+        // Gradiente de Despesa
+        const gradientRed = ctx.createLinearGradient(0, 0, 0, 300);
+        gradientRed.addColorStop(0, 'rgba(255, 90, 95, 0.5)');
+        gradientRed.addColorStop(1, 'rgba(255, 90, 95, 0.05)');
+
+        // Gradiente de Lucro
+        const gradientGreen = ctx.createLinearGradient(0, 0, 0, 300);
+        gradientGreen.addColorStop(0, 'rgba(56, 161, 105, 0.5)');
+        gradientGreen.addColorStop(1, 'rgba(56, 161, 105, 0.05)');
+        
+        const lucroValor = {{ lucro_mes }};
+        const lucroBackground = lucroValor >= 0 ? gradientGreen : gradientRed;
+        const lucroBorder = lucroValor >= 0 ? 'rgba(56, 161, 105, 1)' : 'rgba(255, 90, 95, 1)';
+
+        const financialChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Faturamento', 'Despesas', 'Lucro'],
+                datasets: [{
+                    label: 'Valores em R$',
+                    data: [{{ faturamento_mes }}, {{ despesas_mes }}, lucroValor],
+                    backgroundColor: [
+                        gradient,
+                        gradientRed,
+                        lucroBackground
+                    ],
+                    borderColor: [
+                        'rgba(13, 153, 255, 1)',
+                        'rgba(255, 90, 95, 1)',
+                        lucroBorder
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            display: true,
+                            color: '#EDF2F7', // Cor da grade suave
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#4A5568', // Cor do texto dos eixos
+                            font: { family: "'Inter', sans-serif" }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false // Sem grade vertical
+                        },
+                        ticks: {
+                            color: '#4A5568',
+                            font: { family: "'Inter', sans-serif" }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false // Esconde a legenda
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: '#1A202C',
+                        titleFont: { family: "'Inter', sans-serif", size: 14 },
+                        bodyFont: { family: "'Inter', sans-serif", size: 12 },
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                }
+            }
+        });
+        
+        // --- Carregar próximos agendamentos (lógica mantida) ---
+        fetch('/api/admin/agendamentos-calendario/?start={{ hoje|date:"Y-m-d" }}&end={{ hoje|date:"Y-m-d" }}')
+            .then(response => response.json())
+            .then(data => {
+                const upcomingEl = document.getElementById('upcoming-appointments');
+                if (data.length === 0) {
+                    upcomingEl.innerHTML = '<p class="text-secondary" style="text-align: center; padding: 1rem;">Nenhum agendamento para hoje.</p>';
+                    return;
+                }
+                
+                let html = '<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px;">';
+                data.forEach(event => {
+                    const start = new Date(event.start);
+                    html += `
+                        <li style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #F7FAFC; border-radius: 8px;">
+                            <div style="background: var(--color-primary-light); color: var(--color-primary-active); padding: 10px; border-radius: 6px; font-weight: 600; font-size: 0.9rem;">
+                                ${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: var(--color-gray-900);">${event.extendedProps.cliente}</div>
+                                <div style="color: var(--color-gray-500); font-size: 0.9rem;">${event.extendedProps.servico}</div>
+                            </div>
+                            <span class="status status--${event.extendedProps.status_pagamento === 'Pago' ? 'success' : 'warning'}">${event.extendedProps.status_pagamento}</span>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                upcomingEl.innerHTML = html;
+            });
+        
+        // --- Carregar atividade recente (lógica mantida) ---
+        fetch('/api/admin/agendamentos-calendario/?start={{ semana_passada|date:"Y-m-d" }}&end={{ hoje|date:"Y-m-d" }}')
+            .then(response => response.json())
+            .then(data => {
+                const activityEl = document.getElementById('recent-activity');
+                if (data.length === 0) {
+                    activityEl.innerHTML = '<p class="text-secondary" style="text-align: center; padding: 1rem;">Nenhuma atividade recente.</p>';
+                    return;
+                }
+                
+                data.sort((a, b) => new Date(b.start) - new Date(a.start));
+                let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+                data.slice(0, 5).forEach(event => {
+                    const date = new Date(event.start);
+                    const today = new Date();
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    
+                    let dateStr;
+                    if (date.toDateString() === today.toDateString()) { dateStr = 'Hoje'; }
+                    else if (date.toDateString() === yesterday.toDateString()) { dateStr = 'Ontem'; }
+                    else { dateStr = date.toLocaleDateString('pt-BR'); }
+                    
+                    html += `
+                        <li style="display: flex; padding: 12px 0; border-bottom: 1px solid var(--color-gray-100);">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${event.color}; margin-right: 12px; margin-top: 6px; flex-shrink: 0;"></div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 500; color: var(--color-gray-700);">${event.extendedProps.cliente} - ${event.extendedProps.servico}</div>
+                                <div style="display: flex; gap: 12px; font-size: 0.85rem; color: var(--color-gray-500); margin-top: 4px;">
+                                    <span>${dateStr} às ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}</span>
+                                    <span>${event.extendedProps.status}</span>
+                                    <span>${event.extendedProps.status_pagamento}</span>
+                                </div>
+                            </div>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                activityEl.innerHTML = html;
+            });
+    });
+</script>
+{% endblock %}

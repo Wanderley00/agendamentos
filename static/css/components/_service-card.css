@@ -1,0 +1,171 @@
+/* * Estilos específicos para o Card de Serviço
+ */
+
+/* 1. Grade de serviços com padding superior para a imagem flutuar */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+  margin-top: var(--space-24);
+  padding-top: 75px; /* Padrão (Desktop: 150px / 2) */
+
+  /* --- CORREÇÃO AQUI --- */
+  /* 1. Remove o 'gap' unificado */
+  /* gap: var(--space-32); */ 
+  
+  /* 2. Define o gap das colunas (horizontal) */
+  column-gap: var(--space-32); /* 32px */
+
+  /* 3. Define o gap das linhas (vertical) */
+  /* Deve ser MAIOR que o pull-up (75px) */
+  row-gap: 100px; /* (75px de pull-up + 25px de espaço livre) */
+}
+
+/* 2. Card de serviço sem borda e com overflow visível */
+.service-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--duration-normal) var(--ease-standard);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: none; 
+  overflow: visible; 
+  
+  /* --- ADICIONE ESTAS DUAS LINHAS --- */
+  position: relative; /* Isso cria o "prédio" (contexto de empilhamento) */
+}
+
+.service-card:hover {
+  box-shadow: var(--shadow-lg); 
+  transform: translateY(-4px);
+
+  /* --- ADICIONE ESTA LINHA --- */
+  z-index: 3; /* Faz o card "saltar" para frente no hover */
+}
+
+/* 3. Imagem flutuante */
+.service-image {
+  height: 150px;           
+  width: 150px;            
+  border-radius: 50%;      
+  margin: 0 auto 0; /* Centraliza */
+  background: var(--color-light-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  
+  /* O Efeito Flutuante */
+  margin-top: -75px; /* Puxa para cima */
+  margin-bottom: var(--space-16);
+  border: 4px solid var(--color-white); 
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  position: relative; 
+}
+
+/* 4. Conteúdo do card (sem padding no topo) */
+.service-content {
+  padding: 0 var(--space-20) var(--space-20) var(--space-20);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  text-align: center;
+  /* --- ADICIONE ESTAS DUAS LINHAS --- */
+  position: relative;
+  z-index: 1; /* Isso coloca o conteúdo acima da imagem (z-index: auto) */
+}
+
+/* Fallback de ícone/emoji */
+.service-image-default {
+  font-size: 3rem;
+  color: var(--color-primary);
+}
+
+/* Tag <img> real da imagem */
+.service-image-tag {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+  transition: transform 0.3s ease;
+}
+
+.service-card:hover .service-image-tag {
+  transform: scale(1.05); 
+}
+
+.service-title {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-12);
+  color: var(--color-dark-gray);
+}
+
+.service-description {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-16);
+  flex-grow: 1;
+}
+
+.service-details {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  margin-bottom: var(--space-20);
+  gap: var(--space-16); 
+}
+
+.service-duration {
+  background: var(--color-primary-light);
+  color: var(--color-primary-active);
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.service-price {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+/* Media Query para Mobile */
+@media (max-width: 768px) {
+  
+  .services-grid {
+    padding-top: 60px; 
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+
+    /* --- ADICIONE ESTAS DUAS LINHAS --- */
+    column-gap: var(--space-24); /* 24px horizontal no mobile */
+    row-gap: 84px; /* (60px de pull-up + 24px de espaço livre) */
+  }
+  
+  .service-image {
+    width: 120px;
+    height: 120px;
+    margin-top: -60px; 
+  }
+
+  .service-card {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* =================================================== */
+/* ANIMAÇÃO DE ENTRADA (STAGGERED)                     */
+/* =================================================== */
+
+.service-card--animate {
+  /* Começa invisível e 20px para baixo */
+  opacity: 0;
+  transform: translateY(20px);
+  
+  /* * Aplica a animação 'fadeInUp' que já existe.
+   * 'forwards' garante que o card permaneça visível (opacity: 1) 
+   * após a animação terminar.
+  */
+  animation: fadeInUp 0.5s var(--ease-standard) forwards;
+}

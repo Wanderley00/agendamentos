@@ -1,0 +1,37 @@
+<div id="calendar-screen" class="screen">
+    <div class="container">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('services-screen')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Voltar</span> </button>
+            <h2>Escolha a Data e Hora</h2> <div class="header-placeholder"></div> </div>
+        <div class="selected-service-info" id="selected-service-info"></div>
+        
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button class="btn btn--outline" onclick="changeMonth(-1)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h3 id="current-month"></h3>
+                <button class="btn btn--outline" onclick="changeMonth(1)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+        </div>
+        
+        <div class="time-selection hidden" id="time-selection">
+            <h3>Horários Disponíveis:</h3>
+            <div class="time-slots" id="time-slots"></div>
+            <button class="btn btn--primary btn--lg btn--full-width" id="continue-to-login" disabled>
+                Continuar
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="text-align: center; padding-top: 5rem; min-height: 70vh; display: flex; align-items: center; justify-content: center;">
+    
+    <div class="empty-state" style="max-width: 500px; margin: 0 auto; padding: 2rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);">
+        
+        <div class="empty-icon" style="font-size: 3rem; color: var(--color-red);">🚫</div>
+        
+        <h2 style="margin-bottom: 1rem; color: var(--color-dark-gray);">Estabelecimento não encontrado</h2>
+        
+        <p class="text-secondary" style="font-size: 1.1rem; line-height: 1.6;">
+            Desculpe, o link que você acessou (<strong>/{{ slug_invalido }}</strong>) não corresponde a nenhum estabelecimento cadastrado.
+        </p>
+        
+        <p class="text-secondary" style="margin-top: 1rem; font-size: 0.9rem;">
+            Por favor, verifique se o endereço foi digitado corretamente.
+        </p>
+    </div>
+
+</div>
+{% endblock %}

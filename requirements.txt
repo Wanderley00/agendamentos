@@ -1,0 +1,8 @@
+Django~=4.2
+gunicorn
+whitenoise
+python-dotenv
+mercadopago
+Pillow
+openpyxl
+xhtml2pdf

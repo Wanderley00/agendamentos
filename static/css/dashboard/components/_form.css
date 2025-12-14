@@ -1,0 +1,93 @@
+/* static/css/dashboard/components/_form.css */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  margin-bottom: var(--space-20);
+}
+.form-group {
+  flex: 1;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--space-8);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray-700);
+  font-size: 0.875rem;
+}
+
+.form-control,
+.form-control-static {
+  width: 100%;
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-base);
+  background-color: var(--color-white);
+  transition: var(--transition-fast);
+  font-size: 1rem;
+  color: var(--color-gray-900);
+}
+.form-control-static {
+  background-color: var(--color-gray-50);
+}
+
+.form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+  outline: none;
+}
+.form-text {
+  font-size: 0.875rem;
+  color: var(--color-gray-500);
+  margin-top: var(--space-8);
+}
+textarea.form-control {
+  min-height: 100px;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+.checkbox label {
+  font-weight: var(--font-weight-medium);
+}
+
+/* O container que substitui o <select> */
+.flags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    padding: var(--space-8);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-base);
+    min-height: 80px; /* Altura similar ao select multiple */
+}
+
+/* O botão individual (flag/toggle) */
+.flag-item-toggle {
+    display: inline-block;
+    background-color: var(--color-gray-50);
+    border: 1px solid var(--color-gray-300);
+    color: var(--color-gray-700);
+    padding: var(--space-8) var(--space-12);
+    border-radius: var(--radius-base);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    user-select: none; /* Impede seleção de texto ao clicar */
+    font-size: 0.875rem; /* 14px */
+}
+
+.flag-item-toggle:hover {
+    background-color: var(--color-gray-100);
+}
+
+/* Estado selecionado */
+.flag-item-toggle.selected {
+    background-color: var(--color-primary-light);
+    border-color: var(--color-primary);
+    color: var(--color-primary-active);
+    font-weight: var(--font-weight-medium);
+    box-shadow: 0 0 0 1px var(--color-primary); /* Destaque extra */
+}

@@ -1,0 +1,27 @@
+<div id="admin-login-screen" class="screen">
+    <div class="container" style="max-width: 450px;">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('home-screen')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Voltar</span> </button>
+            <h2>Acesso Restrito</h2>
+            <div class="header-placeholder"></div> </div>
+
+        <div class="login-form-section">
+            <form id="admin-login-form">
+                <p class="text-secondary" style="text-align: center; margin-bottom: 24px;">
+                    Esta área é exclusiva para administradores.
+                </p>
+                <div class="form-group">
+                    <label class="form-label" for="admin-login-email">Email</label>
+                    <input type="email" class="form-control" id="admin-login-email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="admin-login-password">Senha</label>
+                    <input type="password" class="form-control" id="admin-login-password" required>
+                </div>
+                <button type="submit" class="btn btn--primary btn--full-width">Entrar</button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,96 @@
+<div id="expense-modal" class="modal-container hidden">
+    <style>
+        #expense-modal {
+            backdrop-filter: none !important; /* Remove o desfoque que causa lentidão */
+            background: rgba(0, 0, 0, 0.6) !important; /* Escurece um pouco mais para compensar */
+            will-change: opacity, visibility; /* Prepara o navegador para a animação */
+            transform: translateZ(0); /* Ativa aceleração de hardware */
+        }
+        #expense-modal .modal-content {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+        }
+    </style>
+
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="expense-modal-title">Registrar Nova Despesa</h3>
+            <button id="expense-modal-close" class="modal-close">×</button>
+        </div>
+        <div class="modal-body">
+            <form id="expense-form">
+                <div class="form-group">
+                    <label class="form-label" for="expense-description">Descrição</label>
+                    <input type="text" class="form-control" id="expense-description" required placeholder="Ex: Aluguel do Salão">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="expense-amount">Valor (R$)</label>
+                        <input type="number" class="form-control" id="expense-amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="expense-date">Data (Vencimento)</label>
+                        <input type="date" class="form-control" id="expense-date" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="expense-category-select">Categoria</label>
+                    <select class="form-control" id="expense-category-select" required>
+                        <option value="">Selecione...</option>
+                        <option value="Aluguel">Aluguel</option>
+                        <option value="Materiais">Materiais</option>
+                        <option value="Serviços">Serviços</option>
+                        <option value="Impostos">Impostos</option>
+                        <option value="Salários">Salários</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox">
+                        <input type="checkbox" id="expense-paid">
+                        <label for="expense-paid">Despesa já paga</label>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--color-gray-300); margin: 16px 0;">
+
+                <div id="recurrence-section">
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <input type="checkbox" id="expense-recurring">
+                            <label for="expense-recurring" style="color: var(--color-primary); font-weight: 600;">Esta é uma despesa recorrente?</label>
+                        </div>
+                        <small class="form-text">Se marcado, será criado automaticamente todos os meses.</small>
+                    </div>
+
+                    <div id="recurrence-options" class="hidden" style="background: var(--color-gray-50); padding: 12px; border-radius: 8px;">
+                        <div class="form-group">
+                            <label class="form-label">Repetir até quando?</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <div style="flex: 1;">
+                                    <input type="radio" name="recurrence_end" id="rec-forever" value="forever" checked>
+                                    <label for="rec-forever">Indefinidamente</label>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="radio" name="recurrence_end" id="rec-date" value="date">
+                                    <label for="rec-date">Até uma data</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group hidden" id="recurrence-end-date-group">
+                            <label class="form-label" for="expense-recurrence-end">Data Final</label>
+                            <input type="date" class="form-control" id="expense-recurrence-end">
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button id="expense-modal-cancel" class="btn btn--outline">Cancelar</button>
+            <button id="expense-modal-save" class="btn btn--primary">Salvar Despesa</button>
+        </div>
+    </div>
+</div>

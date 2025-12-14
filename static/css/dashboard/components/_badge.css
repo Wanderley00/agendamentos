@@ -1,0 +1,25 @@
+/* static/css/dashboard/components/_badge.css */
+.status {
+  display: inline-block;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.status--success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+.status--warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+.status--danger {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+.status--info {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}

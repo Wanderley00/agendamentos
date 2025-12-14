@@ -1,0 +1,357 @@
+{% extends 'agendamentos/dashboard/base.html' %}
+
+{% block dashboard_content %}
+<h1>Relatórios</h1>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-title">Geração de Relatórios</div>
+    <div class="dashboard-card-body">
+        <div class="report-filters">
+            <div class="form-group">
+                <label>Tipo de Relatório:</label>
+                <select id="report-type" class="form-control">
+                    <option value="faturamento">Faturamento</option>
+                    <option value="servicos">Serviços</option>
+                    <option value="clientes">Clientes</option>
+                    <option value="despesas">Despesas</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Período:</label>
+                <select id="report-period" class="form-control">
+                    <option value="semana">Esta Semana</option>
+                    <option value="mes" selected>Este Mês</option>
+                    <option value="ano">Este Ano</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="custom-period" class="form-row hidden">
+            <div class="form-group">
+                <label>De:</label>
+                <input type="date" id="report-start" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Até:</label>
+                <input type="date" id="report-end" class="form-control">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <button id="generate-report" class="btn btn--primary">Gerar Visualização</button>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-title" id="report-title">Relatório de Faturamento</div>
+    <div class="dashboard-card-body">
+        <div class="report-period-display" id="report-period-display"></div>
+        
+        <div class="chart-container">
+            <canvas id="report-chart"></canvas>
+        </div>
+        
+        <div class="report-summary" id="report-summary">
+            </div>
+        
+        <div class="report-table-container" id="report-table-container">
+            </div>
+        
+        <div class="report-actions" style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+            <button id="download-pdf" class="btn btn--outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Baixar PDF
+            </button>
+            <button id="download-excel" class="btn btn--outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Exportar Excel
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Configurações Globais dos Gráficos ---
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { display: true, color: '#EDF2F7', drawBorder: false },
+                    ticks: { color: '#4A5568', font: { family: "'Inter', sans-serif" } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#4A5568', font: { family: "'Inter', sans-serif" } }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#4A5568',
+                        font: { family: "'Inter', sans-serif" }
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: '#1A202C',
+                    titleFont: { family: "'Inter', sans-serif", size: 14 },
+                    bodyFont: { family: "'Inter', sans-serif", size: 12 },
+                    padding: 12,
+                    cornerRadius: 8
+                }
+            }
+        };
+
+        // --- Elementos do DOM ---
+        const reportType = document.getElementById('report-type');
+        const reportPeriod = document.getElementById('report-period');
+        const customPeriod = document.getElementById('custom-period');
+        const reportStart = document.getElementById('report-start');
+        const reportEnd = document.getElementById('report-end');
+        const generateButton = document.getElementById('generate-report');
+        
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        reportStart.valueAsDate = firstDayOfMonth;
+        reportEnd.valueAsDate = today;
+
+        // --- Handlers de Eventos ---
+        reportPeriod.addEventListener('change', function() {
+            customPeriod.classList.toggle('hidden', this.value !== 'custom');
+        });
+        reportType.addEventListener('change', function() {
+            const type = this.value;
+            document.getElementById('report-title').textContent = `Relatório de ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+        });
+        generateButton.addEventListener('click', generateReport);
+        
+        // --- Função para Montar Parâmetros da API ---
+        function getApiParams() {
+            const type = reportType.value;
+            const period = reportPeriod.value;
+            let params = `tipo=${type}&periodo=${period}`;
+            
+            if (period === 'custom') {
+                if (!reportStart.value || !reportEnd.value) {
+                    alert('Por favor, selecione um período válido.'); 
+                    return null;
+                }
+                params += `&inicio=${reportStart.value}&fim=${reportEnd.value}`;
+            }
+            return params;
+        }
+
+        // --- Funções de Relatório (Visualização na Tela) ---
+        function generateReport() {
+            const type = reportType.value;
+            const apiParams = getApiParams();
+            if (!apiParams) return;
+            
+            // Para visualização na tela, mantemos as rotas JSON originais
+            let apiUrl;
+            switch (type) {
+                case 'faturamento': apiUrl = `/api/admin/faturamento/?${apiParams}&tipo=diario`; break;
+                case 'servicos': apiUrl = `/api/admin/faturamento/?${apiParams}&tipo=servico`; break;
+                case 'clientes': alert('Relatório visual de clientes não implementado.'); return;
+                case 'despesas': apiUrl = `/api/admin/despesas/?${apiParams}`; break;
+                default: return;
+            }
+            
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const periodDisplay = document.getElementById('report-period-display');
+                    const start = new Date(data.periodo.inicio + 'T00:00:00-03:00'); // Adiciona fuso
+                    const end = new Date(data.periodo.fim + 'T00:00:00-03:00');
+                    periodDisplay.textContent = `Período: ${start.toLocaleDateString('pt-BR')} a ${end.toLocaleDateString('pt-BR')}`;
+                    
+                    switch (type) {
+                        case 'faturamento': generateFaturamentoReport(data); break;
+                        case 'servicos': generateServicosReport(data); break;
+                        case 'despesas': generateDespesasReport(data); break;
+                    }
+                })
+                .catch(error => console.error('Erro ao gerar relatório:', error));
+        }
+        
+        function generateFaturamentoReport(data) {
+            let totalFaturamento = 0, totalAgendamentos = 0;
+            data.dados.forEach(item => {
+                totalFaturamento += item.total;
+                totalAgendamentos += item.quantidade;
+            });
+
+            // Resumo
+            document.getElementById('report-summary').innerHTML = `
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="stat-card"><div class="stat-title">Total Faturado</div><div class="stat-value">R$ ${totalFaturamento.toFixed(2)}</div></div>
+                    <div class="stat-card"><div class="stat-title">Total de Agendamentos</div><div class="stat-value">${totalAgendamentos}</div></div>
+                    <div class="stat-card"><div class="stat-title">Ticket Médio</div><div class="stat-value">R$ ${(totalFaturamento / totalAgendamentos || 0).toFixed(2)}</div></div>
+                </div>`;
+
+            // Gráfico
+            const ctx = document.getElementById('report-chart').getContext('2d');
+            if (window.reportChart) { window.reportChart.destroy(); }
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(13, 153, 255, 0.5)');
+            gradient.addColorStop(1, 'rgba(13, 153, 255, 0.05)');
+            
+            const labels = data.dados.map(item => new Date(item.data + 'T00:00:00-03:00').toLocaleDateString('pt-BR'));
+            const values = data.dados.map(item => item.total);
+            
+            window.reportChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: values,
+                        backgroundColor: gradient,
+                        borderColor: '#0D99FF',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { ...chartOptions }
+            });
+
+            // Tabela
+            let tableHTML = `<div class="data-table-container"><table class="data-table"><thead><tr><th>Data</th><th>Quantidade</th><th>Valor Total</th></tr></thead><tbody>`;
+            data.dados.forEach(item => {
+                tableHTML += `<tr><td>${new Date(item.data + 'T00:00:00-03:00').toLocaleDateString('pt-BR')}</td><td>${item.quantidade}</td><td>R$ ${item.total.toFixed(2)}</td></tr>`;
+            });
+            tableHTML += `</tbody><tfoot><tr><th>Total</th><th>${totalAgendamentos}</th><th>R$ ${totalFaturamento.toFixed(2)}</th></tr></tfoot></table></div>`;
+            document.getElementById('report-table-container').innerHTML = tableHTML;
+        }
+        
+        function generateServicosReport(data) {
+            let totalFaturamento = 0, totalAgendamentos = 0;
+            data.dados.forEach(item => {
+                totalFaturamento += item.total;
+                totalAgendamentos += item.quantidade;
+            });
+            
+            // Resumo
+            document.getElementById('report-summary').innerHTML = `
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="stat-card"><div class="stat-title">Total Faturado</div><div class="stat-value">R$ ${totalFaturamento.toFixed(2)}</div></div>
+                    <div class="stat-card"><div class="stat-title">Total de Serviços</div><div class="stat-value">${data.dados.length}</div></div>
+                    <div class="stat-card"><div class="stat-title">Total de Agendamentos</div><div class="stat-value">${totalAgendamentos}</div></div>
+                </div>`;
+            
+            // Gráfico
+            const ctx = document.getElementById('report-chart').getContext('2d');
+            if (window.reportChart) { window.reportChart.destroy(); }
+            
+            const labels = data.dados.map(item => item.servico);
+            const values = data.dados.map(item => item.total);
+            
+            window.reportChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento por Serviço (R$)',
+                        data: values,
+                        backgroundColor: [
+                            'rgba(13, 153, 255, 0.7)', 'rgba(56, 161, 105, 0.7)', 'rgba(255, 149, 0, 0.7)',
+                            'rgba(255, 90, 95, 0.7)', 'rgba(155, 89, 182, 0.7)', 'rgba(52, 152, 219, 0.7)'
+                        ],
+                        borderRadius: 5
+                    }]
+                },
+                options: { ...chartOptions }
+            });
+            
+            // Tabela
+            let tableHTML = `<div class="data-table-container"><table class="data-table"><thead><tr><th>Serviço</th><th>Quantidade</th><th>Valor Total</th><th>% do Faturamento</th></tr></thead><tbody>`;
+            data.dados.sort((a, b) => b.total - a.total).forEach(item => {
+                const percentual = (item.total / totalFaturamento * 100).toFixed(2);
+                tableHTML += `<tr><td>${item.servico}</td><td>${item.quantidade}</td><td>R$ ${item.total.toFixed(2)}</td><td>${percentual}%</td></tr>`;
+            });
+            tableHTML += `</tbody><tfoot><tr><th>Total</th><th>${totalAgendamentos}</th><th>R$ ${totalFaturamento.toFixed(2)}</th><th>100%</th></tr></tfoot></table></div>`;
+            document.getElementById('report-table-container').innerHTML = tableHTML;
+        }
+        
+        function generateDespesasReport(data) {
+            // Resumo
+            document.getElementById('report-summary').innerHTML = `
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="stat-card"><div class="stat-title">Total de Despesas</div><div class="stat-value">R$ ${data.total.toFixed(2)}</div></div>
+                    <div class="stat-card"><div class="stat-title">Total de Itens</div><div class="stat-value">${data.despesas.length}</div></div>
+                    <div class="stat-card"><div class="stat-title">Categorias</div><div class="stat-value">${data.resumo_categorias.length}</div></div>
+                </div>`;
+            
+            // Gráfico
+            const ctx = document.getElementById('report-chart').getContext('2d');
+            if (window.reportChart) { window.reportChart.destroy(); }
+            
+            const labels = data.resumo_categorias.map(item => item.categoria);
+            const values = data.resumo_categorias.map(item => item.total);
+            
+            window.reportChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            'rgba(13, 153, 255, 0.8)', 'rgba(56, 161, 105, 0.8)', 'rgba(255, 149, 0, 0.8)',
+                            'rgba(255, 90, 95, 0.8)', 'rgba(155, 89, 182, 0.8)', 'rgba(52, 152, 219, 0.8)'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: { y: { display: false }, x: { display: false } },
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+            
+            // Tabela
+            let tableHTML = `<h4>Resumo por Categoria</h4><div class="data-table-container"><table class="data-table"><thead><tr><th>Categoria</th><th>Quantidade</th><th>Valor Total</th><th>% do Total</th></tr></thead><tbody>`;
+            data.resumo_categorias.sort((a, b) => b.total - a.total).forEach(cat => {
+                const percentual = (cat.total / data.total * 100).toFixed(2);
+                tableHTML += `<tr><td>${cat.categoria}</td><td>${cat.quantidade}</td><td>R$ ${cat.total.toFixed(2)}</td><td>${percentual}%</td></tr>`;
+            });
+            tableHTML += `</tbody><tfoot><tr><th>Total</th><th>${data.despesas.length}</th><th>R$ ${data.total.toFixed(2)}</th><th>100%</th></tr></tfoot></table></div>`;
+            
+            let tableList = `<h4 style="margin-top: 24px;">Lista de Despesas</h4><div class="data-table-container"><table class="data-table"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Status</th></tr></thead><tbody>`;
+            data.despesas.forEach(expense => {
+                tableList += `<tr><td>${new Date(expense.data + 'T00:00:00-03:00').toLocaleDateString('pt-BR')}</td><td>${expense.descricao}</td><td>${expense.categoria}</td><td>R$ ${expense.valor.toFixed(2)}</td><td><span class="status status--${expense.pago ? 'success' : 'warning'}">${expense.pago ? 'Pago' : 'Pendente'}</span></td></tr>`;
+            });
+            tableList += `</tbody></table></div>`;
+
+            document.getElementById('report-table-container').innerHTML = tableHTML + tableList;
+        }
+        
+        // --- FUNÇÕES DE DOWNLOAD (NOVAS) ---
+        function handleDownload(format) {
+            const params = getApiParams();
+            if (!params) return;
+            
+            // Redireciona o navegador para a URL de download
+            window.location.href = `/api/admin/exportar/${format}/?${params}`;
+        }
+
+        document.getElementById('download-pdf').addEventListener('click', () => handleDownload('pdf'));
+        document.getElementById('download-excel').addEventListener('click', () => handleDownload('excel'));
+
+        // Gerar relatório inicial
+        generateReport();
+    });
+</script>
+{% endblock %}

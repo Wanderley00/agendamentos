@@ -1,0 +1,135 @@
+/* static/css/dashboard/layout/_layout.css */
+
+/* Mobile-First: Layout em coluna */
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--color-gray-50);
+}
+
+.dashboard-sidebar {
+  width: 100%;
+  background-color: var(--color-gray-900);
+  color: var(--color-white);
+  border-bottom: 1px solid var(--color-gray-700);
+  z-index: 10;
+  padding: var(--space-8);
+}
+
+.sidebar-header {
+  padding: var(--space-12) var(--space-16);
+  border-bottom: 1px solid var(--color-gray-700);
+  display: block; /* Visível no mobile e desktop */
+}
+
+.sidebar-header h2 {
+  color: var(--color-white);
+  font-weight: 600;
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.sidebar-nav {
+  list-style: none;
+  padding: var(--space-8) 0;
+  margin: 0;
+  display: flex;
+  overflow-x: auto; /* Scroll horizontal no mobile */
+}
+
+.sidebar-nav li {
+  margin: 0 var(--space-4);
+  flex-shrink: 0;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  padding: var(--space-12) var(--space-16);
+  color: var(--color-gray-300);
+  text-decoration: none;
+  transition: var(--transition-fast);
+  border-radius: var(--radius-base);
+  white-space: nowrap;
+  font-weight: var(--font-weight-medium);
+}
+
+.sidebar-nav a:hover {
+  background-color: var(--color-gray-700);
+  color: var(--color-white);
+}
+
+.sidebar-nav a.active {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  font-weight: 600;
+}
+
+.sidebar-nav a svg {
+  margin-right: var(--space-12);
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.dashboard-content {
+  flex: 1;
+  padding: var(--space-16);
+  overflow-y: auto;
+}
+
+/* Desktop Overrides */
+@media (min-width: 768px) {
+  .dashboard-container {
+    flex-direction: row;
+    height: 100vh; /* NOVO: Trava a altura total do container */
+    overflow: hidden; /* NOVO: Impede o container de rolar */
+  }
+
+  .dashboard-sidebar {
+    width: 260px;
+    height: 100vh;
+    border-right: 1px solid var(--color-gray-100);
+    border-bottom: none;
+    padding: var(--space-16);
+    display: flex;
+    flex-direction: column;
+    
+    /* --- MODIFICAÇÕES --- */
+    position: fixed; /* NOVO: Fixa a sidebar na tela */
+    top: 0;          /* NOVO: Alinha no topo */
+    left: 0;         /* NOVO: Alinha na esquerda */
+    z-index: 100;    /* NOVO: Garante que fique por cima de tudo */
+  }
+  
+  .sidebar-header {
+     padding: var(--space-16);
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    margin: var(--space-16) 0;
+    
+    /* --- NOVO (para scroll interno se o menu for grande) --- */
+    flex: 1; /* Ocupa o espaço restante dentro da sidebar */
+    overflow-y: auto; /* Adiciona scroll SÓ no menu se ele for maior que a tela */
+  }
+
+  .sidebar-nav li {
+    margin: 0 0 var(--space-8) 0;
+  }
+  
+  .dashboard-content {
+    padding: var(--space-32);
+    
+    /* --- MODIFICAÇÕES --- */
+    /* width: calc(100% - 260px); REMOVIDO */
+    margin-left: 260px; /* NOVO: Empurra o conteúdo para a direita (largura da sidebar) */
+    width: 100%; /* NOVO: Faz o conteúdo ocupar o espaço restante */
+    height: 100vh; /* NOVO: Trava a altura do conteúdo à tela */
+    /* overflow-y: auto; (Esta regra já existe na base  e fará o conteúdo rolar) */
+  }
+}

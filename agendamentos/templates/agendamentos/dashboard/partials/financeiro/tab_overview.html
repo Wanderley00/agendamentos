@@ -1,0 +1,77 @@
+<div class="tab-content" id="tab-overview">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">Resumo Financeiro</div>
+        <div class="dashboard-card-body">
+            <div class="action-bar">
+                <div class="period-selector">
+                    <label>Período:</label>
+                    <select id="overview-period" class="form-control">
+                        <option value="semana">Esta Semana</option>
+                        <option value="mes" selected>Este Mês</option>
+                        <option value="ano">Este Ano</option>
+                        <option value="custom">Personalizado</option>
+                    </select>
+                </div>
+                
+                <div id="custom-period" class="custom-period hidden">
+                    <div class="form-row">
+                        <input type="date" id="overview-start" class="form-control">
+                        <span>até</span>
+                        <input type="date" id="overview-end" class="form-control">
+                        <button id="overview-apply" class="btn btn--primary btn--sm">Aplicar</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Receita Total</div>
+                    <div class="stat-value" id="total-income">R$ 0,00</div>
+                    <div class="stat-description">Pagamentos recebidos</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title">Despesas</div>
+                    <div class="stat-value" id="total-expenses">R$ 0,00</div>
+                    <div class="stat-description">Total de gastos no período</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title">Lucro</div>
+                    <div class="stat-value" id="total-profit">R$ 0,00</div>
+                    <div class="stat-description">Receita - Despesas</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title">Pendente</div>
+                    <div class="stat-value" id="pending-income">R$ 0,00</div>
+                    <div class="stat-description">Pagamentos a receber</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="financial-overview-chart"></canvas>
+            </div>
+            
+            <div class="summary-table">
+                <h4>Resumo de Serviços</h4>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Serviço</th>
+                                <th>Quantidade</th>
+                                <th>Valor Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="services-summary">
+                            <tr>
+                                <td colspan="3">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

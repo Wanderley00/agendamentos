@@ -1,0 +1,49 @@
+<div id="home-screen" class="screen active">
+    <div class="hero-container">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            
+            <div class="logo-section">
+                <img id="negocio-logo" class="negocio-logo" src="" alt="Logo do Negócio" style="display: none;">
+                <h1 class="logo">Bella Designer</h1>
+                <p class="tagline">Espaço dedicado à beleza e bem-estar</p>
+            </div>
+
+            <div id="location-contact-container" class="location-contact-bar hidden">
+            
+                <a id="btn-maps" href="#" target="_blank" class="info-pill hidden">
+                    <span class="icon">📍</span>
+                    <span class="text">Ver no Mapa</span>
+                </a>
+
+                <a id="btn-whatsapp" href="#" target="_blank" class="info-pill hidden">
+                    <span class="icon">💬</span>
+                    <span class="text">WhatsApp</span>
+                </a>
+
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn--primary" onclick="startBookingFlow()">
+                    Agendar Horário
+                </button>
+
+                <button id="btn-portfolio" class="btn btn--outline hidden" onclick="openPortfolioModal()">
+                    Ver Portfólio
+                </button>
+
+                <button class="btn btn--outline" onclick="showScreen('client-area-screen')">
+                    Área do Cliente
+                </button>
+                
+                <button id="home-logout-button" class="btn btn--outline hidden" onclick="performLogout(event)">
+                    Sair
+                </button>
+            </div>
+
+            <div class="admin-login-link">
+                <a href="#" onclick="showAdminLoginScreen(event)">Acesso Administrativo</a>
+            </div>
+        </div>
+    </div>
+</div>

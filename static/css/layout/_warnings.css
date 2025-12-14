@@ -1,0 +1,11 @@
+/* * Estilos para a Tela de Avisos
+ */
+.warnings-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16); 
+}
+
+.continue-section {
+  margin-top: var(--space-32);
+}

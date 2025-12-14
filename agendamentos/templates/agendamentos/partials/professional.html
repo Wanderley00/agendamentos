@@ -1,0 +1,64 @@
+<div id="professional-screen" class="screen">
+    <div class="container">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('services-screen')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </svg>
+                <span>Voltar aos Serviços</span> </button>
+            <h2>Escolha o Profissional</h2>
+            <div class="header-placeholder"></div> </div>
+        
+        <div class="selected-service-info" id="selected-service-info-pro">
+            </div>
+        
+        <div class="professionals-grid" id="professional-list">
+            </div>
+    </div>
+</div>
+
+<style>
+    .professionals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-16);
+        margin-top: var(--space-24);
+    }
+    
+    .professional-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-20);
+        text-align: center;
+        cursor: pointer;
+        transition: all var(--duration-normal) var(--ease-standard);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .professional-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--color-primary);
+    }
+    
+    .professional-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: var(--radius-full);
+        background: var(--color-light-gray);
+        margin: 0 auto var(--space-16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--color-primary);
+    }
+    
+    .professional-name {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-dark-gray);
+    }
+</style>

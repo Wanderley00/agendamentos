@@ -1,0 +1,22 @@
+# Python e Django padrões
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambiente Virtual (onde ficam as libs instaladas)
+venv/
+env/
+.env
+
+# Banco de dados local (SQLite não deve ir para o Git profissionalmente)
+db.sqlite3
+
+# Arquivos de Mídia (Uploads de usuários não devem ir para o código)
+media/
+# Mas queremos manter a pasta vazia, então ignoramos tudo dentro dela exceto .gitkeep se houver
+!media/.gitkeep
+
+# Arquivos de sistema e IDE
+.vscode/
+.idea/
+.DS_Store

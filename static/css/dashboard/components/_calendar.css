@@ -1,0 +1,17 @@
+/* static/css/dashboard/components/_calendar.css */
+#calendar {
+}
+.fc .fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+.fc-daygrid-day.fc-day-today {
+  background-color: var(--color-primary-light) !important;
+}
+.fc-event {
+  cursor: pointer;
+  border-radius: var(--radius-base) !important;
+  padding: var(--space-4) var(--space-8) !important;
+  font-size: 0.8rem !important;
+}

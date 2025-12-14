@@ -1,0 +1,100 @@
+<div id="login-screen" class="screen">
+    <div class="container">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('calendar-screen')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Voltar</span> </button>
+            <h2>Resumo</h2> <div class="header-placeholder"></div> </div>
+
+        <div class="login-container">
+            <div class="login-form-section">
+                <div id="auth-forms-container">
+                    <div class="form-toggle">
+                        <button class="toggle-btn active" onclick="showLoginForm(event)">Já sou cliente</button>
+                        <button class="toggle-btn" onclick="showRegisterForm(event)">Primeiro agendamento</button>
+                    </div>
+
+                    <form id="login-form" class="auth-form">
+                        <div class="form-group">
+                            <label class="form-label" for="login-phone">Telefone (com DDD)</label>
+                            <input type="tel" class="form-control" id="login-phone" required placeholder="Ex: 11987654321">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="login-nascimento">Data de Nascimento</label>
+                            <input type="date" class="form-control" id="login-nascimento" required>
+                        </div>
+                        <button type="submit" class="btn btn--primary btn--full-width">Entrar e Agendar</button>
+                    </form>
+
+                    <form id="register-form" class="auth-form hidden">
+                        <div class="form-group">
+                            <label class="form-label" for="register-name">Nome</label>
+                            <input type="text" class="form-control" id="register-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="register-lastname">Sobrenome</label>
+                            <input type="text" class="form-control" id="register-lastname" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="register-nascimento">Data de Nascimento</label>
+                            <input type="date" class="form-control" id="register-nascimento" required>
+                            <small class="form-text">Usado como senha.</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="register-phone">Telefone (WhatsApp)</label>
+                            <input type="tel" class="form-control" id="register-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="register-email">Email (Opcional)</label>
+                            <input type="email" class="form-control" id="register-email">
+                        </div>
+                        <button type="submit" class="btn btn--primary btn--full-width">Cadastrar e Agendar</button>
+                    </form>
+                </div>
+                
+                </div>
+
+            <div class="booking-summary">
+                <h3>Detalhes do Pedido</h3>
+
+                <div id="summary-service-image-container" style="display: none; margin-bottom: 16px; text-align: center;">
+                    <img id="summary-service-img" src="" alt="Imagem do Serviço" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-primary);">
+                </div>
+                
+                <div class="summary-item">
+                    <span class="label">Cliente:</span>
+                    <span class="value" id="summary-client">Carregando...</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="label">Serviço:</span>
+                    <span class="value" id="summary-service"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Profissional:</span>
+                    <span class="value" id="summary-professional"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Data:</span>
+                    <span class="value" id="summary-date"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Horário:</span>
+                    <span class="value" id="summary-time"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Duração:</span>
+                    <span class="value" id="summary-duration"></span>
+                </div>
+                
+                <div style="border-top: 1px dashed var(--color-border); margin: 16px 0;"></div>
+
+                <div id="summary-financial-details">
+                </div>
+
+                <div id="summary-actions-container" class="mt-4 hidden">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

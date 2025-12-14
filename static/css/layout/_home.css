@@ -1,0 +1,247 @@
+/* * Estilos de layout para a Home Screen (.hero-container, .logo, etc.)
+ */
+.hero-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(135deg, hsla(var(--color-secondary-h), var(--color-secondary-s), var(--color-secondary-l), 0.3) 0%, hsl(var(--color-primary-h), var(--color-primary-s), 95%, 0.5) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(hsl(var(--color-primary-h), var(--color-primary-s), 90%) 6px, transparent 2px);
+  background-size: 30px 30px;
+  opacity: 0.5;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+  padding: var(--space-24);
+}
+
+.logo-section {
+  margin-bottom: var(--space-32);
+  animation: fadeInUp 1s ease-out;
+}
+
+.logo {
+  font-size: var(--font-size-3xl);
+  color: var(--color-dark-gray);
+  margin-bottom: var(--space-16);
+  font-weight: var(--font-weight-bold);
+  background: linear-gradient(120deg, 
+      var(--color-primary), 
+      var(--color-secondary),
+      var(--color-primary));
+  background-size: 200% auto; 
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 3s ease infinite;
+  letter-spacing: -0.5px;
+}
+
+.negocio-logo {
+  width: 160px; 
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto var(--space-24); 
+  border: 5px solid var(--color-white);
+  box-shadow: 
+      0 0 0 3px var(--color-white), 
+      0 0 0 7px var(--color-secondary),
+      0 0 40px rgba(0, 0, 0, 0.15),
+      0 0 80px hsla(var(--color-secondary-h), var(--color-secondary-s), var(--color-secondary-l), 0.3);
+  display: block;
+  transform: scale(0) rotate(-180deg);
+  opacity: 0;
+  animation: scaleInBounce 0.6s var(--ease-bounce) 0.3s forwards;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.negocio-logo:hover {
+  transform: scale(1.05) rotate(5deg);
+}
+
+.tagline {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-normal);
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  align-items: center;
+  animation: fadeInUp 1s ease-out 0.3s both;
+}
+
+.admin-login-link {
+    text-align: center;
+    margin-top: var(--space-24);
+}
+
+.admin-login-link a {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.admin-login-link a:hover {
+    color: var(--color-text);
+    text-decoration: underline;
+}
+
+/* Botões finos da Home */
+.action-buttons .btn {
+    width: 250px; 
+    max-width: 90vw; 
+    padding-top: var(--space-8) !important;
+    padding-bottom: var(--space-8) !important;
+    padding-left: var(--space-32) !important;
+    padding-right: var(--space-32) !important;
+}
+
+/* Media Queries para Home */
+@media (max-width: 767px) {
+    .hero-container {
+        align-items: flex-start; 
+    }
+    
+    .hero-content {
+        padding-top: 10vh; 
+        padding-bottom: var(--space-64); 
+    }
+
+    .logo-section {
+        margin-bottom: var(--space-64); 
+    }
+
+    .logo {
+      font-size: var(--font-size-2xl);
+    }
+    
+    .tagline {
+      font-size: var(--font-size-md);
+    }
+}
+
+@media (min-width: 768px) {
+    .action-buttons {
+      flex-direction: row;
+      justify-content: center;
+    }
+  
+    .action-buttons .btn {
+        width: auto; 
+        padding-top: var(--space-8) !important;
+        padding-bottom: var(--space-8) !important;
+        padding-left: var(--space-32) !important;
+        padding-right: var(--space-32) !important;
+    }
+
+    .logo-section {
+        margin-bottom: var(--space-48);
+    }
+    
+    .hero-content {
+      transform: translateY(-60px);
+    }
+}
+
+/* Container dos botões de contato */
+.location-contact-bar {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-12);
+    
+    /* Espaçamento vertical: afasta da tagline (cima) e dos botões principais (baixo) */
+    margin-top: var(--space-24); 
+    margin-bottom: var(--space-32); /* <--- AQUI CRIAMOS O ESPAÇO QUE FALTAVA */
+    
+    flex-wrap: wrap;
+    animation: fadeInUp 1s ease-out 0.2s both;
+    
+    /* Garante que o container tenha largura para distribuir os itens */
+    width: 100%;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* O estilo "Pill" (Pílula) */
+.info-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center; /* Centraliza o texto dentro do botão */
+    
+    background-color: rgba(255, 255, 255, 0.9); /* Um pouco mais sólido para leitura */
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--color-border);
+    
+    padding: 10px 20px; /* Aumentamos um pouco a área de toque */
+    border-radius: var(--radius-full);
+    
+    text-decoration: none;
+    color: var(--color-dark-gray);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    
+    min-width: 140px; /* Garante um tamanho mínimo elegante */
+}
+
+.info-pill:hover {
+    background-color: var(--color-white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    color: var(--color-primary);
+    border-color: var(--color-primary); /* Realce na borda ao passar o mouse */
+    text-decoration: none;
+}
+
+.info-pill .icon {
+    margin-right: 8px;
+    font-size: 1.2em;
+}
+
+/* --- AJUSTES ESPECÍFICOS PARA CELULAR --- */
+@media (max-width: 768px) {
+    .location-contact-bar {
+        /* Mantém o espaçamento lateral e inferior que criamos antes */
+        padding: 0 var(--space-16);
+        gap: var(--space-12); /* Um pouco mais de espaço entre os dois botões */
+        margin-bottom: var(--space-40); 
+    }
+
+    .info-pill {
+        /* Faz os botões dividirem a largura da tela */
+        flex: 1; 
+        min-width: auto; 
+        
+        /* REDUZI AQUI: De 12px para 8px na vertical */
+        padding: 8px 4px; 
+        
+        /* Ajuste fino na fonte para ficar proporcional à altura menor */
+        font-size: 0.85rem; 
+        line-height: 1.2;
+    }
+
+    /* Ajusta levemente o ícone para acompanhar o botão menor */
+    .info-pill .icon {
+        font-size: 1.1em;
+        margin-right: 6px;
+    }
+}

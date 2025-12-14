@@ -1,0 +1,21 @@
+/* static/css/dashboard-main.css */
+
+/* 1. Base (Variáveis, Resets, Tipografia) */
+@import url('dashboard/base/_variables.css');
+@import url('dashboard/base/_base.css');
+@import url('dashboard/base/_typography.css');
+
+/* 2. Layout (Sidebar, Estrutura) */
+@import url('dashboard/layout/_layout.css');
+
+/* 3. Componentes (Botões, Forms, Modais, Cards) */
+@import url('dashboard/components/_button.css');
+@import url('dashboard/components/_badge.css');
+@import url('dashboard/components/_card.css');
+@import url('dashboard/components/_chart.css');
+@import url('dashboard/components/_table.css');
+@import url('dashboard/components/_form.css');
+@import url('dashboard/components/_tabs.css');
+@import url('dashboard/components/_calendar.css');
+@import url('dashboard/components/_modal.css');
+@import url('dashboard/components/_utils.css');

@@ -1,0 +1,669 @@
+{% extends 'agendamentos/dashboard/base.html' %}
+
+{% block dashboard_content %}
+<h1>Gestão Financeira</h1>
+
+{# Inclusão dos Partials de Abas #}
+{% include 'agendamentos/dashboard/partials/financeiro/tabs_nav.html' %}
+{% include 'agendamentos/dashboard/partials/financeiro/tab_overview.html' %}
+{% include 'agendamentos/dashboard/partials/financeiro/tab_income.html' %}
+{% include 'agendamentos/dashboard/partials/financeiro/tab_expenses.html' %}
+{% include 'agendamentos/dashboard/partials/financeiro/modal_expense.html' %}
+
+{# --- NOVOS MODAIS PARA GERENCIAMENTO DE RECORRÊNCIA --- #}
+
+<div id="recurring-manager-modal" class="modal-container hidden">
+    <style>
+        #recurring-manager-modal {
+            backdrop-filter: none !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            will-change: opacity, visibility;
+            transform: translateZ(0);
+        }
+    </style>
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3>Cobranças Recorrentes Ativas</h3>
+            <button id="recurring-manager-close" class="modal-close">×</button>
+        </div>
+        <div class="modal-body">
+            <p class="text-secondary mb-4">
+                Edite ou finalize suas cobranças automáticas.
+                <br><small>Nota: Alterações afetam apenas os meses futuros ainda não gerados.</small>
+            </p>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Descrição</th>
+                            <th>Valor</th>
+                            <th>Dia Venc.</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recurring-list-tbody">
+                        <tr><td colspan="4">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="recurring-manager-close-btn" class="btn btn--outline">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div id="recurring-edit-modal" class="modal-container hidden">
+    <style>
+        #recurring-edit-modal {
+            backdrop-filter: none !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            z-index: 1010; /* Fica acima do gerenciador */
+        }
+    </style>
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>Editar Recorrência</h3>
+            <button id="recurring-edit-close" class="modal-close">×</button>
+        </div>
+        <form id="recurring-edit-form">
+            <input type="hidden" id="rec-edit-id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                    <input type="text" class="form-control" id="rec-edit-descricao" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Novo Valor (R$)</label>
+                    <input type="number" class="form-control" id="rec-edit-valor" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="rec-edit-dia">Dia do Vencimento (1-31)</label>
+                    <input type="number" class="form-control" id="rec-edit-dia" min="1" max="31" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="recurring-edit-cancel" class="btn btn--outline">Cancelar</button>
+                <button type="submit" class="btn btn--primary">Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block dashboard_js %}
+<style>
+    .btn--danger-outline {
+        color: var(--color-danger);
+        border-color: var(--color-danger);
+    }
+    .btn--danger-outline:hover {
+        background-color: var(--color-danger-light);
+        color: var(--color-danger);
+    }
+</style>
+<script>
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true, grid: { display: true, color: '#EDF2F7', drawBorder: false }, ticks: { color: '#4A5568', font: { family: "'Inter', sans-serif" } } },
+            x: { grid: { display: false }, ticks: { color: '#4A5568', font: { family: "'Inter', sans-serif" } } }
+        },
+        plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: '#1A202C', padding: 12, cornerRadius: 8 } }
+    };
+
+    // =================================================================
+    // GESTÃO DE RECORRÊNCIAS
+    // =================================================================
+    
+    // Abre o modal de lista de recorrências
+    window.openRecurringManager = async function() {
+        const modal = document.getElementById('recurring-manager-modal');
+        const tbody = document.getElementById('recurring-list-tbody');
+        modal.classList.remove('hidden');
+        
+        tbody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
+        
+        try {
+            const response = await fetch('/api/admin/recorrencias/');
+            const data = await response.json();
+            
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">Nenhuma cobrança recorrente ativa.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            data.forEach(rec => {
+                // Escapa aspas para passar no onclick
+                const recData = JSON.stringify(rec).replace(/"/g, '"');
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${rec.descricao}</td>
+                        <td>R$ ${rec.valor.toFixed(2)}</td>
+                        <td>Dia ${rec.dia_vencimento}</td>
+                        <td style="display:flex; gap:8px;">
+                            <button type="button" class="btn btn--sm btn--outline" onclick="openEditRecurrence(${recData})">Editar</button>
+                            <button type="button" class="btn btn--sm btn--danger-outline" onclick="endRecurrence(${rec.id})">Finalizar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch(e) {
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="4" class="text-error">Erro ao carregar.</td></tr>';
+        }
+    };
+
+    // Abre o modal de edição de uma regra específica
+    window.openEditRecurrence = function(rec) {
+        document.getElementById('rec-edit-id').value = rec.id;
+        document.getElementById('rec-edit-descricao').value = rec.descricao;
+        document.getElementById('rec-edit-valor').value = rec.valor;
+        document.getElementById('rec-edit-dia').value = rec.dia_vencimento;
+        document.getElementById('recurring-edit-modal').classList.remove('hidden');
+    };
+
+    // Encerra a recorrência (define data fim)
+    window.endRecurrence = async function(id) {
+        if(!confirm("Deseja finalizar esta cobrança recorrente? Ela não será gerada nos próximos meses.")) return;
+        
+        try {
+            const response = await fetch(`/api/admin/recorrencias/${id}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+                body: JSON.stringify({ acao: 'encerrar' })
+            });
+            if(response.ok) {
+                alert("Recorrência finalizada com sucesso.");
+                openRecurringManager(); // Recarrega lista de regras
+                loadExpensesData(); // Atualiza a tabela principal
+            } else {
+                alert("Erro ao finalizar recorrência.");
+            }
+        } catch(e) { alert("Erro de conexão."); }
+    };
+
+    // Salva a edição da regra de recorrência
+    async function saveRecurrenceEdit(e) {
+        e.preventDefault();
+        const id = document.getElementById('rec-edit-id').value;
+        const payload = {
+            acao: 'editar',
+            descricao: document.getElementById('rec-edit-descricao').value,
+            valor: parseFloat(document.getElementById('rec-edit-valor').value),
+            dia_vencimento: parseInt(document.getElementById('rec-edit-dia').value)
+        };
+
+        try {
+            const response = await fetch(`/api/admin/recorrencias/${id}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+                body: JSON.stringify(payload)
+            });
+            if(response.ok) {
+                alert("Recorrência atualizada! Os próximos meses serão gerados com as novas regras.");
+                document.getElementById('recurring-edit-modal').classList.add('hidden');
+                openRecurringManager(); // Recarrega lista
+            } else {
+                alert("Erro ao atualizar.");
+            }
+        } catch(e) { alert("Erro de conexão."); }
+    }
+
+    // =================================================================
+    // FUNÇÕES DA TELA DE DESPESAS
+    // =================================================================
+
+    window.markExpenseAsPaid = async function(expenseId) {
+        try {
+            const response = await fetch(`/api/admin/atualizar-despesa/${expenseId}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+                body: JSON.stringify({ pago: true })
+            });
+            if ((await response.json()).status === 'success') {
+                alert('Despesa marcada como paga!');
+                loadExpensesData();
+                loadFinancialOverview();
+            }
+        } catch (error) { alert('Erro ao atualizar.'); }
+    };
+
+    window.editExpense = async function(expenseId) {
+        try {
+            const response = await fetch(`/api/admin/despesa/${expenseId}/`);
+            const expense = await response.json();
+            
+            document.getElementById('expense-description').value = expense.descricao;
+            document.getElementById('expense-amount').value = expense.valor;
+            document.getElementById('expense-date').value = expense.data;
+            document.getElementById('expense-category-select').value = expense.categoria;
+            document.getElementById('expense-paid').checked = expense.pago;
+            document.getElementById('expense-form').dataset.expenseId = expenseId;
+            document.getElementById('expense-modal-title').textContent = 'Editar Despesa';
+            
+            // Esconde opção de recorrencia na edição de uma despesa individual
+            document.getElementById('recurrence-section').classList.add('hidden'); 
+
+            const saveButton = document.getElementById('expense-modal-save');
+            saveButton.textContent = 'Atualizar Despesa';
+            saveButton.onclick = updateExpense;
+            
+            document.getElementById('expense-modal').classList.remove('hidden');
+        } catch (error) { alert('Erro ao carregar.'); }
+    };
+
+    window.deleteExpense = async function(expenseId) {
+        if(!confirm("Excluir despesa?")) return;
+        try {
+            const response = await fetch(`/api/admin/deletar-despesa/${expenseId}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+            });
+            if ((await response.json()).status === 'success') {
+                loadExpensesData();
+                loadFinancialOverview();
+            }
+        } catch (error) { alert('Erro ao excluir.'); }
+    };
+
+    async function updateExpense() {
+        const expenseId = document.getElementById('expense-form').dataset.expenseId;
+        const description = document.getElementById('expense-description').value;
+        const amount = document.getElementById('expense-amount').value;
+        const date = document.getElementById('expense-date').value;
+        const category = document.getElementById('expense-category-select').value;
+        const paid = document.getElementById('expense-paid').checked;
+
+        try {
+            const response = await fetch(`/api/admin/atualizar-despesa/${expenseId}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+                body: JSON.stringify({ descricao: description, valor: parseFloat(amount), data: date, categoria: category, pago: paid })
+            });
+            if ((await response.json()).status === 'success') {
+                alert('Atualizado!');
+                document.getElementById('expense-modal').classList.add('hidden');
+                loadExpensesData();
+                loadFinancialOverview();
+            }
+        } catch (error) { alert('Erro ao salvar.'); }
+    }
+
+    window.resetExpenseForm = function() {
+        const form = document.getElementById('expense-form');
+        form.reset();
+        delete form.dataset.expenseId;
+        document.getElementById('expense-date').valueAsDate = new Date();
+        document.getElementById('expense-modal-title').textContent = 'Registrar Nova Despesa';
+        
+        // Mostra opções de recorrência para nova despesa
+        document.getElementById('recurrence-section').classList.remove('hidden');
+        document.getElementById('recurrence-options').classList.add('hidden');
+        
+        const saveButton = document.getElementById('expense-modal-save');
+        saveButton.textContent = 'Salvar Despesa';
+        saveButton.onclick = saveNewExpense;
+        document.getElementById('expense-modal').classList.remove('hidden');
+    };
+
+    async function saveNewExpense() {
+        const description = document.getElementById('expense-description').value;
+        const amount = document.getElementById('expense-amount').value;
+        const date = document.getElementById('expense-date').value;
+        const category = document.getElementById('expense-category-select').value;
+        const paid = document.getElementById('expense-paid').checked;
+        
+        // Lógica de Recorrência
+        const isRecurring = document.getElementById('expense-recurring').checked;
+        let recurrenceEndDate = null;
+        if (isRecurring) {
+            const endType = document.querySelector('input[name="recurrence_end"]:checked').value;
+            if (endType === 'date') recurrenceEndDate = document.getElementById('expense-recurrence-end').value;
+        }
+
+        try {
+            const response = await fetch('/api/admin/registrar-despesa/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+                body: JSON.stringify({
+                    descricao: description, valor: parseFloat(amount), data: date, categoria: category, pago: paid,
+                    recorrente: isRecurring, data_fim_recorrencia: recurrenceEndDate
+                })
+            });
+            if ((await response.json()).status === 'success') {
+                alert('Sucesso!');
+                document.getElementById('expense-modal').classList.add('hidden');
+                loadExpensesData();
+                loadFinancialOverview();
+            }
+        } catch (error) { alert('Erro ao salvar.'); }
+    }
+
+    function loadFinancialOverview() {
+        const period = document.getElementById('overview-period').value;
+        let url = `/api/admin/resumo-financeiro/?periodo=${period}`;
+        if (period === 'custom') {
+            url += `&inicio=${document.getElementById('overview-start').value}&fim=${document.getElementById('overview-end').value}`;
+        }
+        
+        fetch(url).then(r => r.json()).then(data => {
+            document.getElementById('total-income').textContent = `R$ ${data.financeiro.faturamento.toFixed(2)}`;
+            document.getElementById('total-expenses').textContent = `R$ ${data.financeiro.despesas.toFixed(2)}`;
+            document.getElementById('total-profit').textContent = `R$ ${data.financeiro.lucro.toFixed(2)}`;
+            
+            const ctx = document.getElementById('financial-overview-chart').getContext('2d');
+            if (window.overviewChart) window.overviewChart.destroy();
+            window.overviewChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Receita', 'Despesas', 'Lucro'],
+                    datasets: [{
+                        label: 'Valores',
+                        data: [data.financeiro.faturamento, data.financeiro.despesas, data.financeiro.lucro],
+                        backgroundColor: ['#0D99FF', '#FF5A5F', data.financeiro.lucro >= 0 ? '#38A169' : '#FF5A5F'],
+                        borderRadius: 5
+                    }]
+                },
+                options: { ...chartOptions }
+            });
+
+            // --- CORREÇÃO AQUI (Resumo de Serviços) ---
+            const servicesSummary = document.getElementById('services-summary');
+            if (servicesSummary && data.servicos_populares) {
+                servicesSummary.innerHTML = data.servicos_populares.length ?
+                    data.servicos_populares.map(s => `
+                        <tr>
+                            <td>${s.servico__nome}</td>
+                            <td>${s.total}</td>
+                            <td>R$ ${s.valor_monetario.toFixed(2)}</td>
+                        </tr>
+                    `).join('') :
+                    '<tr><td colspan="3">Nenhum serviço realizado neste período.</td></tr>';
+            }
+            // --- FIM DA CORREÇÃO ---
+        });
+    }
+
+    function loadIncomeData() {
+        const period = document.getElementById('income-period').value;
+        let baseUrl = `periodo=${period}`;
+        if (period === 'custom') {
+            baseUrl += `&inicio=${document.getElementById('income-start').value}&fim=${document.getElementById('income-end').value}`;
+        }
+
+        fetch(`/api/admin/faturamento/?${baseUrl}&tipo=diario`)
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('income-chart').getContext('2d');
+                if (window.incomeChart) window.incomeChart.destroy();
+
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(13, 153, 255, 0.5)');
+                gradient.addColorStop(1, 'rgba(13, 153, 255, 0.05)');
+
+                const labels = data.dados.map(item => new Date(item.data).toLocaleDateString('pt-BR'));
+                const values = data.dados.map(item => item.total);
+
+                window.incomeChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Faturamento Diário (R$)',
+                            data: values,
+                            backgroundColor: gradient,
+                            borderColor: 'rgba(13, 153, 255, 1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(13, 153, 255, 1)',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: { ...chartOptions }
+                });
+            });
+        
+        fetch(`/api/admin/agendamentos-pagamento/?${baseUrl}`)
+            .then(response => response.json())
+            .then(data => {
+                const pendingTable = document.getElementById('pending-table');
+                if (data.pendentes && data.pendentes.length > 0) {
+                    pendingTable.innerHTML = data.pendentes.map(apt => `
+                        <tr>
+                            <td>${new Date(apt.data).toLocaleDateString('pt-BR')}</td>
+                            <td>${apt.cliente}</td>
+                            <td>${apt.servico}</td>
+                            <td>R$ ${apt.valor.toFixed(2)}</td>
+                            <td>${generatePaymentStatusSelect(apt.status_pagamento, apt.id)}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    pendingTable.innerHTML = '<tr><td colspan="5">Nenhum pagamento pendente.</td></tr>';
+                }
+                
+                const incomeTable = document.getElementById('income-table');
+                if (data.pagos && data.pagos.length > 0) {
+                    incomeTable.innerHTML = data.pagos.map(apt => `
+                        <tr>
+                            <td>${new Date(apt.data).toLocaleDateString('pt-BR')}</td>
+                            <td>${apt.cliente}</td>
+                            <td>${apt.servico}</td>
+                            <td>R$ ${apt.valor.toFixed(2)}</td>
+                            <td><span class="status status--success">${apt.status}</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    incomeTable.innerHTML = '<tr><td colspan="5">Nenhum pagamento recebido.</td></tr>';
+                }
+            });
+    }
+
+    function loadExpensesData() {
+        const period = document.getElementById('expense-period').value;
+        const category = document.getElementById('expense-category').value;
+        
+        let url = `/api/admin/despesas/?periodo=${period}`;
+        
+        // CORREÇÃO: Pegar os inputs corretos da aba de despesas
+        if (period === 'custom') {
+            const start = document.getElementById('expense-start').value;
+            const end = document.getElementById('expense-end').value;
+            // Se as datas estiverem preenchidas, envia para a API processar
+            if(start && end) {
+                url += `&inicio=${start}&fim=${end}`;
+            }
+        }
+        
+        if (category) url += `&categoria=${category}`;
+        
+        fetch(url).then(r => r.json()).then(data => {
+            // Gráfico
+            const ctx = document.getElementById('expenses-chart').getContext('2d');
+            if (window.expensesChart) window.expensesChart.destroy();
+            
+            const sorted = data.resumo_categorias.sort((a, b) => b.total - a.total);
+            window.expensesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(i => i.categoria),
+                    datasets: [{ label: 'Despesas', data: sorted.map(i => i.total), backgroundColor: '#FF5A5F', borderRadius: 5 }]
+                },
+                options: { ...chartOptions, indexAxis: 'y' }
+            });
+            
+            // Tabela Resumo
+            const summary = document.getElementById('expenses-summary');
+            summary.innerHTML = sorted.length ? sorted.map(c => `<tr><td>${c.categoria}</td><td>${c.quantidade}</td><td>R$ ${c.total.toFixed(2)}</td></tr>`).join('') : '<tr><td colspan="3">Sem despesas.</td></tr>';
+
+            // Tabela Lista (COM CORREÇÃO DE STATUS ATRASADO)
+            const table = document.getElementById('expenses-table');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Zera hora para comparar apenas a data
+
+            table.innerHTML = data.despesas.length ? data.despesas.map(e => {
+                const expenseDate = new Date(e.data + 'T00:00:00-03:00'); // Garante fuso
+                
+                let statusBadge = '';
+                if (e.pago) {
+                    statusBadge = '<span class="status status--success">Pago</span>';
+                } else if (expenseDate < today) {
+                    // Se não pago e data anterior a hoje -> Atrasado
+                    statusBadge = '<span class="status status--danger">Atrasado</span>';
+                } else {
+                    statusBadge = '<span class="status status--warning">Pendente</span>';
+                }
+
+                return `
+                <tr>
+                    <td>${expenseDate.toLocaleDateString('pt-BR')}</td>
+                    <td>${e.descricao}</td>
+                    <td>${e.categoria}</td>
+                    <td>R$ ${e.valor.toFixed(2)}</td>
+                    <td>${statusBadge}</td>
+                    <td style="display: flex; gap: 8px;">
+                        <button class="btn btn--sm btn--outline" onclick="editExpense(${e.id})">Editar</button>
+                        <button class="btn btn--sm btn--danger-outline" onclick="deleteExpense(${e.id})">Excluir</button>
+                    </td>
+                </tr>
+            `;
+            }).join('') : '<tr><td colspan="6">Nenhuma despesa no período.</td></tr>';
+        });
+    }
+
+    function generatePaymentStatusSelect(status, id) {
+        return `
+            <select class="form-control payment-status-select" data-appointment-id="${id}">
+                <option value="Aguardando Pagamento" ${status === 'Aguardando Pagamento' ? 'selected' : ''}>Aguardando Pagamento</option>
+                <option value="Pendente" ${status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                <option value="Adiantamento Realizado" ${status === 'Adiantamento Realizado' ? 'selected' : ''}>Adiantamento Realizado</option>
+                <option value="Pago" ${status === 'Pago' ? 'selected' : ''}>Pago</option>
+                <option value="Cancelado" ${status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+            </select>
+        `;
+    }
+
+    async function updateAppointmentPaymentStatus(appointmentId, status) {
+        try {
+            const response = await fetch(`/api/admin/atualizar-pagamento/${appointmentId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ status_pagamento: status })
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                alert('Status atualizado!');
+                loadIncomeData();
+                loadFinancialOverview();
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Erro ao atualizar status.');
+        }
+    }
+
+    // --- INICIALIZAÇÃO E EVENTOS ---
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 1. Configuração de Tabs
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tab = this.dataset.tab;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                this.classList.add('active');
+                document.getElementById(`tab-${tab}`).classList.remove('hidden');
+                
+                if(tab === 'overview') loadFinancialOverview();
+                if(tab === 'income') loadIncomeData();
+                if(tab === 'expenses') loadExpensesData();
+            });
+        });
+
+        // 2. Seletores de Período (Lógica de exibição do Custom)
+        ['overview', 'income', 'expense'].forEach(prefix => {
+            const sel = document.getElementById(`${prefix}-period`);
+            if(sel) {
+                sel.addEventListener('change', function() {
+                    let customPeriodId = null;
+                    if (prefix === 'overview') customPeriodId = 'custom-period';
+                    else if (prefix === 'income') customPeriodId = 'income-custom-period';
+                    else if (prefix === 'expense') customPeriodId = 'expense-custom-period';
+
+                    if (customPeriodId) {
+                        const customEl = document.getElementById(customPeriodId);
+                        if (this.value === 'custom') {
+                            customEl.classList.remove('hidden');
+                        } else {
+                            customEl.classList.add('hidden');
+                            // Recarrega automático se não for custom
+                            if (prefix === 'overview') loadFinancialOverview();
+                            else if (prefix === 'income') loadIncomeData();
+                            else if (prefix === 'expense') loadExpensesData();
+                        }
+                    }
+                });
+            }
+        });
+
+        // 3. Botões "Aplicar" para datas personalizadas
+        document.getElementById('overview-apply')?.addEventListener('click', loadFinancialOverview);
+        document.getElementById('income-apply')?.addEventListener('click', loadIncomeData);
+        document.getElementById('expense-apply')?.addEventListener('click', loadExpensesData);
+        
+        document.getElementById('expense-category')?.addEventListener('change', loadExpensesData);
+        
+        // 4. Modal de Nova Despesa
+        document.getElementById('btn-add-expense')?.addEventListener('click', resetExpenseForm);
+        document.getElementById('expense-modal-close')?.addEventListener('click', () => document.getElementById('expense-modal').classList.add('hidden'));
+        document.getElementById('expense-modal-cancel')?.addEventListener('click', () => document.getElementById('expense-modal').classList.add('hidden'));
+        
+        // 5. Modal de Gerenciamento de Recorrência (Botões)
+        document.getElementById('btn-manage-recurring')?.addEventListener('click', openRecurringManager);
+        document.getElementById('recurring-manager-close')?.addEventListener('click', () => document.getElementById('recurring-manager-modal').classList.add('hidden'));
+        document.getElementById('recurring-manager-close-btn')?.addEventListener('click', () => document.getElementById('recurring-manager-modal').classList.add('hidden'));
+        
+        // 6. Modal de Edição de Recorrência
+        document.getElementById('recurring-edit-close')?.addEventListener('click', () => document.getElementById('recurring-edit-modal').classList.add('hidden'));
+        document.getElementById('recurring-edit-cancel')?.addEventListener('click', () => document.getElementById('recurring-edit-modal').classList.add('hidden'));
+        document.getElementById('recurring-edit-form')?.addEventListener('submit', saveRecurrenceEdit);
+
+        // 7. Lógica da Checkbox de Recorrência no Modal de Despesa
+        document.getElementById('expense-recurring')?.addEventListener('change', function() {
+            const opts = document.getElementById('recurrence-options');
+            this.checked ? opts.classList.remove('hidden') : opts.classList.add('hidden');
+        });
+        
+        document.getElementsByName('recurrence_end').forEach(r => {
+            r.addEventListener('change', function() {
+                const dateGroup = document.getElementById('recurrence-end-date-group');
+                this.value === 'date' ? dateGroup.classList.remove('hidden') : dateGroup.classList.add('hidden');
+            });
+        });
+
+        // 8. Handler para tabela de pagamentos pendentes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('payment-status-select')) {
+                updateAppointmentPaymentStatus(e.target.dataset.appointmentId, e.target.value);
+            }
+        });
+
+        // Carregamento Inicial
+        loadFinancialOverview();
+    });
+</script>
+{% endblock %}
