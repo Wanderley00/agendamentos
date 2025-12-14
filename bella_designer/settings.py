@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-import dj_database_url
 
 # Chame isso em algum lugar perto do BASE_DIR se ainda não estiver fazendo
 load_dotenv()
