@@ -3,9 +3,11 @@ from django.contrib.auth.models import User
 import os
 import django
 
-# 1. Configura o ambiente Django
+# --- PASSO 1: CONFIGURAR O AMBIENTE (ISSO TEM QUE VIR PRIMEIRO) ---
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bella_designer.settings")
 django.setup()
+
+# --- PASSO 2: IMPORTAR OS MODELOS (SÓ DEPOIS DO SETUP) ---
 
 
 def seed():
@@ -14,7 +16,7 @@ def seed():
     # --- 1. CRIAR SUPERUSUÁRIO ---
     USERNAME = 'admin'
     EMAIL = 'admin@admin.com'
-    PASSWORD = 'admin'  # <--- TROQUE ISSO DEPOIS NO SITE
+    PASSWORD = 'admin'  # <--- Lembre de trocar depois
 
     if not User.objects.filter(username=USERNAME).exists():
         print(f"Criando superusuário: {USERNAME}")
@@ -31,7 +33,7 @@ def seed():
         Negocio.objects.create(
             nome_negocio=NOME_NEGOCIO,
             slug=SLUG,
-            cor_primaria='#5CCFAC',  # Cor padrão
+            cor_primaria='#5CCFAC',
             tagline='Espaço dedicado à beleza e bem-estar'
         )
     else:
