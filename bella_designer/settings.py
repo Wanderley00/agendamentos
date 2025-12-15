@@ -11,7 +11,9 @@ load_dotenv()
 
 MERCADO_PAGO_ACCESS_TOKEN = os.getenv('MERCADO_PAGO_ACCESS_TOKEN')
 
-BASE_URL = os.getenv('BASE_URL', 'https://jrtechhub.online')
+BASE_URL = os.getenv('BASE_URL', 'https://bella-designer.onrender.com')
+
+# BASE_URL = os.getenv('BASE_URL', 'https://jrtechhub.online')
 
 # Tempo em minutos que o PIX ficará ativo antes de expirar
 MINUTOS_EXPIRACAO_PIX = 5
@@ -29,9 +31,14 @@ DEBUG = False
 ALLOWED_HOSTS = ['jrtechhub.online',
                  'www.jrtechhub.online', '127.0.0.1', 'localhost', '*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://bella-designer.onrender.com',
+    'https://jrtechhub.online',  # Pode manter o antigo se quiser
+]
 
-CSRF_TRUSTED_ORIGINS = ['https://jrtechhub.online',
-                        'https://www.jrtechhub.online']
+
+# CSRF_TRUSTED_ORIGINS = ['https://jrtechhub.online',
+#                         'https://www.jrtechhub.online']
 
 # Application definition
 
