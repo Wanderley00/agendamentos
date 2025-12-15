@@ -1,22 +1,20 @@
-from agendamentos.models import Negocio
-from django.contrib.auth.models import User
 import os
 import django
 
-# --- 1. CONFIGURAÇÃO (ISTO TEM QUE SER A PRIMEIRA COISA) ---
+# 1. Configuração (Fica no topo)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bella_designer.settings")
 django.setup()
 
-# --- 2. IMPORTS DOS MODELOS (SÓ AGORA, DEPOIS DO SETUP) ---
-
+# 2. Imports com trava para o formatador não mover (os comentários são importantes!)
+from django.contrib.auth.models import User  # isort:skip
+from agendamentos.models import Negocio      # isort:skip
 
 def seed():
     print("🌱 Iniciando o Seed do Banco de Dados...")
 
-    # --- 1. CRIAR SUPERUSUÁRIO ---
     USERNAME = 'admin'
     EMAIL = 'admin@admin.com'
-    PASSWORD = 'admin'  # <--- Lembre de trocar depois no painel
+    PASSWORD = 'admin'  # <--- Lembre de trocar depois
 
     if not User.objects.filter(username=USERNAME).exists():
         print(f"Criando superusuário: {USERNAME}")
@@ -24,7 +22,6 @@ def seed():
     else:
         print(f"Superusuário {USERNAME} já existe.")
 
-    # --- 2. CRIAR O NEGÓCIO ---
     NOME_NEGOCIO = 'Kaleme Studio'
     SLUG = 'kaleme-studio'
 
@@ -40,7 +37,6 @@ def seed():
         print(f"Negócio {NOME_NEGOCIO} já existe.")
 
     print("✅ Seed concluído com sucesso!")
-
 
 if __name__ == '__main__':
     seed()
