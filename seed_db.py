@@ -3,11 +3,11 @@ from django.contrib.auth.models import User
 import os
 import django
 
-# --- PASSO 1: CONFIGURAR O AMBIENTE (ISSO TEM QUE VIR PRIMEIRO) ---
+# --- 1. CONFIGURAÇÃO (ISTO TEM QUE SER A PRIMEIRA COISA) ---
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bella_designer.settings")
 django.setup()
 
-# --- PASSO 2: IMPORTAR OS MODELOS (SÓ DEPOIS DO SETUP) ---
+# --- 2. IMPORTS DOS MODELOS (SÓ AGORA, DEPOIS DO SETUP) ---
 
 
 def seed():
@@ -16,7 +16,7 @@ def seed():
     # --- 1. CRIAR SUPERUSUÁRIO ---
     USERNAME = 'admin'
     EMAIL = 'admin@admin.com'
-    PASSWORD = 'admin'  # <--- Lembre de trocar depois
+    PASSWORD = 'admin'  # <--- Lembre de trocar depois no painel
 
     if not User.objects.filter(username=USERNAME).exists():
         print(f"Criando superusuário: {USERNAME}")
@@ -44,4 +44,3 @@ def seed():
 
 if __name__ == '__main__':
     seed()
-    # Versão corrigida v2 - Forçando update
