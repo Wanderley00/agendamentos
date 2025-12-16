@@ -669,6 +669,29 @@ def mercadopago_webhook(request):
                     agendamento.observacoes = f"Pagamento integral {payment_id_mp} aprovado via webhook. Aguardando confirmação manual."
 
                 agendamento.save()
+
+                # --- AQUI ENTRA O N8N ---
+                try:
+                    dados_notificacao = {
+                        "cliente_nome": agendamento.cliente.user.get_full_name() or agendamento.cliente.user.username,
+                        # Formato: 5511999999999
+                        "cliente_telefone": re.sub(r'\D', '', agendamento.cliente.telefone),
+                        "servico_nome": agendamento.servico.nome,
+                        "profissional": agendamento.empreendedor_executor.user.get_full_name(),
+                        "data": agendamento.data.strftime('%d/%m/%Y'),
+                        "horario": agendamento.horario.strftime('%H:%M'),
+                        "local_nome": agendamento.servico.negocio.nome_negocio,
+                        "valor": float(agendamento.servico.preco),
+                        "link_google_calendar": "https://calendar.google.com/..."  # Podemos gerar isso depois
+                    }
+
+                    disparar_notificacao(
+                        'pagamento_confirmado', dados_notificacao)
+                    print("🚀 Notificação enviada para o n8n!")
+
+                except Exception as e:
+                    print(f"Erro ao preparar dados n8n: {e}")
+
                 logger.info(
                     f"PAGAMENTO APROVADO: Agendamento {agendamento.id} PAGO. Aguardando confirmação manual.")
 
