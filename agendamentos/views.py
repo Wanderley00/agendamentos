@@ -3,6 +3,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, HttpResponseForbidden
 import json
+import re
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
@@ -670,12 +671,20 @@ def mercadopago_webhook(request):
 
                 agendamento.save()
 
+                # 1. Limpa tudo que não é número
+                telefone_limpo = re.sub(
+                    r'\D', '', agendamento.cliente.telefone)
+
+                # 2. Se for um número brasileiro sem DDI (11 dígitos), adiciona o 55
+                if len(telefone_limpo) == 11:
+                    telefone_limpo = f"55{telefone_limpo}"
+
                 # --- AQUI ENTRA O N8N ---
                 try:
                     dados_notificacao = {
                         "cliente_nome": agendamento.cliente.user.get_full_name() or agendamento.cliente.user.username,
                         # Formato: 5511999999999
-                        "cliente_telefone": re.sub(r'\D', '', agendamento.cliente.telefone),
+                        "cliente_telefone": telefone_limpo,
                         "servico_nome": agendamento.servico.nome,
                         "profissional": agendamento.empreendedor_executor.user.get_full_name(),
                         "data": agendamento.data.strftime('%d/%m/%Y'),
