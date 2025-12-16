@@ -145,3 +145,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configuração do n8n
+# Se não tiver variável de ambiente, usa uma string vazia (para não quebrar localmente)
+N8N_WEBHOOK_URL = os.getenv('N8N_WEBHOOK_URL', '')

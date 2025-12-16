@@ -35,6 +35,8 @@ from openpyxl.utils import get_column_letter
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 
+from .webhooks import disparar_notificacao
+
 # --- IMPORTAÇÃO CORRIGIDA ---
 # Adicionamos EmpreendedorProfile e removemos importações duplicadas
 from .models import (
@@ -1311,7 +1313,8 @@ def api_resumo_financeiro(request):
         status__in=['Confirmado', 'Concluído']
     ).values('servico__nome').annotate(
         qtd=Count('id'),
-        valor_total=Sum('preco_final') # Soma o valor real arrecadado por esse serviço
+        # Soma o valor real arrecadado por esse serviço
+        valor_total=Sum('preco_final')
     ).order_by('-valor_total')[:5]
 
     # Formata a lista para o JSON
@@ -1346,6 +1349,7 @@ def api_resumo_financeiro(request):
         },
         'servicos_populares': servicos_populares_list
     })
+
 
 @user_passes_test(is_admin)
 def api_faturamento(request):
@@ -1443,6 +1447,7 @@ def api_faturamento(request):
         'dados': dados
     })
 
+
 @user_passes_test(is_admin)
 def api_despesas(request):
     try:
@@ -1453,7 +1458,7 @@ def api_despesas(request):
     periodo = request.GET.get('periodo', 'mes')
     categoria = request.GET.get('categoria', None)
     hoje = timezone.now().date()
-    
+
     # Definição das datas de início e fim
     inicio = hoje.replace(day=1)
     fim = hoje.replace(day=calendar.monthrange(hoje.year, hoje.month)[1])
@@ -1463,7 +1468,7 @@ def api_despesas(request):
         fim = inicio + timedelta(days=6)
     elif periodo == 'mes':
         # Já definido acima como padrão
-        pass 
+        pass
     elif periodo == 'ano':
         inicio = hoje.replace(month=1, day=1)
         fim = hoje.replace(month=12, day=31)
@@ -1476,7 +1481,7 @@ def api_despesas(request):
                 inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
                 fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
             except ValueError:
-                pass 
+                pass
 
     # Passamos a data final do filtro para o processador de recorrências.
     processar_despesas_recorrentes(negocio, data_limite_solicitada=fim)
@@ -1485,11 +1490,11 @@ def api_despesas(request):
     filtros = {'data__range': [inicio, fim]}
     if categoria:
         filtros['categoria'] = categoria
-    
+
     # CORREÇÃO AQUI: Alterado de '-data' para 'data' (ascendente)
     # Isso exibe da data mais antiga (ou mais próxima) para a mais distante/futura
     despesas = base_despesas.filter(**filtros).order_by('data')
-    
+
     resumo_categorias = base_despesas.filter(
         data__range=[inicio, fim]
     ).values('categoria').annotate(
@@ -1525,13 +1530,14 @@ def api_despesas(request):
         'total': float(despesas.aggregate(total=Sum('valor'))['total'] or 0)
     })
 
+
 @user_passes_test(is_admin)
 def api_listar_recorrencias(request):
     """Lista todas as regras de recorrência ativas (que gerarão cobranças futuras)."""
     try:
         negocio = request.user.empreendedor_profile.negocio
         hoje = timezone.now().date()
-        
+
         # Define o fim do mês atual
         ultimo_dia_mes = calendar.monthrange(hoje.year, hoje.month)[1]
         fim_deste_mes = hoje.replace(day=ultimo_dia_mes)
@@ -1558,18 +1564,20 @@ def api_listar_recorrencias(request):
 
         return JsonResponse(data, safe=False)
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400) 
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 
 @user_passes_test(is_admin)
 def api_gerenciar_recorrencia_detalhe(request, recorrencia_id):
     """Edita valor ou encerra uma recorrência e limpa lançamentos futuros."""
     try:
         negocio = request.user.empreendedor_profile.negocio
-        recorrencia = get_object_or_404(DespesaRecorrente, id=recorrencia_id, negocio=negocio)
+        recorrencia = get_object_or_404(
+            DespesaRecorrente, id=recorrencia_id, negocio=negocio)
     except Exception:
         return JsonResponse({'status': 'error', 'message': 'Recorrência não encontrada.'}, status=404)
 
-    if request.method == 'POST': 
+    if request.method == 'POST':
         data = json.loads(request.body)
         acao = data.get('acao')
 
@@ -1586,20 +1594,20 @@ def api_gerenciar_recorrencia_detalhe(request, recorrencia_id):
             # 2. LIMPEZA DE FUTURO (CRUCIAL PARA PODER USAR O MESMO NOME DEPOIS)
             # Remove as despesas individuais que JÁ tinham sido geradas no banco para datas futuras
             # Isso limpa a agenda para que você possa criar uma nova regra com o mesmo nome sem duplicatas.
-            
+
             nome_gerado = f"{recorrencia.descricao} (Recorrente)"
-            
+
             Despesa.objects.filter(
                 negocio=negocio,
-                descricao=nome_gerado,           
-                categoria=recorrencia.categoria, 
-                valor=recorrencia.valor,         
+                descricao=nome_gerado,
+                categoria=recorrencia.categoria,
+                valor=recorrencia.valor,
                 data__gt=fim_deste_mes,          # Apaga tudo que estiver DEPOIS deste mês
                 pago=False                       # Segurança: não apaga se já foi marcado como pago
             ).delete()
 
             return JsonResponse({'status': 'success', 'message': 'Cobrança recorrente finalizada. Lançamentos futuros removidos.'})
-        
+
         elif acao == 'editar':
             # Atualiza os dados para as PRÓXIMAS gerações
             if 'valor' in data:
@@ -1608,11 +1616,12 @@ def api_gerenciar_recorrencia_detalhe(request, recorrencia_id):
                 recorrencia.descricao = data['descricao']
             if 'dia_vencimento' in data:
                 recorrencia.dia_vencimento = data['dia_vencimento']
-            
+
             recorrencia.save()
             return JsonResponse({'status': 'success', 'message': 'Recorrência atualizada para os próximos meses.'})
 
     return JsonResponse({'status': 'error', 'message': 'Método inválido'}, status=405)
+
 
 @user_passes_test(is_admin)
 def api_atualizar_pagamento(request, agendamento_id):
@@ -1656,9 +1665,9 @@ def api_registrar_despesa(request):
     try:
         negocio = request.user.empreendedor_profile.negocio
         dados = json.loads(request.body)
-        
+
         data_obj = datetime.strptime(dados['data'], '%Y-%m-%d').date()
-        
+
         # 1. Cria a despesa atual (sempre cria a primeira)
         nova_despesa = Despesa(
             negocio=negocio,
@@ -1675,8 +1684,9 @@ def api_registrar_despesa(request):
         if is_recorrente:
             data_fim = None
             if dados.get('data_fim_recorrencia'):
-                data_fim = datetime.strptime(dados['data_fim_recorrencia'], '%Y-%m-%d').date()
-            
+                data_fim = datetime.strptime(
+                    dados['data_fim_recorrencia'], '%Y-%m-%d').date()
+
             DespesaRecorrente.objects.create(
                 negocio=negocio,
                 descricao=dados['descricao'],
@@ -1685,7 +1695,8 @@ def api_registrar_despesa(request):
                 data_inicio=data_obj,
                 dia_vencimento=data_obj.day,
                 data_fim=data_fim,
-                ultima_geracao=data_obj # Marca que a deste mês já foi gerada (a 'nova_despesa' acima)
+                # Marca que a deste mês já foi gerada (a 'nova_despesa' acima)
+                ultima_geracao=data_obj
             )
 
         return JsonResponse({
@@ -1705,6 +1716,7 @@ def api_registrar_despesa(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+
 @user_passes_test(is_admin)
 def api_atualizar_despesa(request, despesa_id):
     if request.method != 'POST':
@@ -1712,9 +1724,9 @@ def api_atualizar_despesa(request, despesa_id):
     try:
         negocio = request.user.empreendedor_profile.negocio
         despesa = get_object_or_404(Despesa, id=despesa_id, negocio=negocio)
-        
+
         dados = json.loads(request.body)
-        
+
         if 'descricao' in dados:
             despesa.descricao = dados['descricao']
         if 'valor' in dados:
@@ -1725,12 +1737,12 @@ def api_atualizar_despesa(request, despesa_id):
             despesa.categoria = dados['categoria']
         if 'pago' in dados:
             despesa.pago = dados['pago']
-            
+
         despesa.save()
-        
+
         # Nota: A edição de uma despesa individual NÃO afeta a regra de recorrência
         # (DespesaRecorrente) para manter a integridade do histórico.
-        
+
         return JsonResponse({
             'status': 'success',
             'message': 'Despesa atualizada com sucesso',
@@ -1749,6 +1761,7 @@ def api_atualizar_despesa(request, despesa_id):
         return JsonResponse({'status': 'error', 'message': 'Despesa não encontrada.'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 
 @user_passes_test(is_admin)
 def api_deletar_despesa(request, despesa_id):
@@ -3231,6 +3244,7 @@ def api_admin_deletar_agendamento(request, agendamento_id):
             f"Erro inesperado em api_admin_deletar_agendamento: {e}", exc_info=True)
         return JsonResponse({'status': 'error', 'message': f'Erro interno: {e}'}, status=500)
 
+
 def processar_despesas_recorrentes(negocio, data_limite_solicitada=None):
     """
     Verifica despesas recorrentes e cria as instâncias de Despesa 
@@ -3238,18 +3252,20 @@ def processar_despesas_recorrentes(negocio, data_limite_solicitada=None):
     daqui a 5 meses, as despesas sejam geradas até lá.
     """
     hoje = timezone.now().date()
-    
+
     # Se nenhuma data for passada, garante pelo menos até o fim do próximo mês
     if not data_limite_solicitada:
         proximo_mes = hoje.replace(day=28) + timedelta(days=4)
-        data_limite_solicitada = proximo_mes.replace(day=calendar.monthrange(proximo_mes.year, proximo_mes.month)[1])
-    
+        data_limite_solicitada = proximo_mes.replace(
+            day=calendar.monthrange(proximo_mes.year, proximo_mes.month)[1])
+
     # Margem de segurança: sempre processa até o final do mês da data solicitada
     # Ex: Se pediu até 15/05, gera até 31/05 para garantir
     ano_limite = data_limite_solicitada.year
     mes_limite = data_limite_solicitada.month
     ultimo_dia_limite = calendar.monthrange(ano_limite, mes_limite)[1]
-    data_limite_real = datetime(ano_limite, mes_limite, ultimo_dia_limite).date()
+    data_limite_real = datetime(
+        ano_limite, mes_limite, ultimo_dia_limite).date()
 
     recorrencias = DespesaRecorrente.objects.filter(negocio=negocio)
 
@@ -3261,30 +3277,32 @@ def processar_despesas_recorrentes(negocio, data_limite_solicitada=None):
 
             # Começa a verificar a partir do mês seguinte à última geração
             data_base = rec.ultima_geracao
-            
+
             # Loop de segurança para evitar infinito (limite de 5 anos no futuro)
             safety_counter = 0
-            
+
             while True:
                 safety_counter += 1
-                if safety_counter > 60: break 
+                if safety_counter > 60:
+                    break
 
                 # Avança para o próximo mês de forma robusta
                 ano_prox = data_base.year + (1 if data_base.month == 12 else 0)
                 mes_prox = 1 if data_base.month == 12 else data_base.month + 1
-                
+
                 # Define a data alvo baseada no dia de vencimento original
                 max_dia = calendar.monthrange(ano_prox, mes_prox)[1]
                 dia_vencimento = min(rec.dia_vencimento, max_dia)
-                
-                proxima_data = datetime(ano_prox, mes_prox, dia_vencimento).date()
+
+                proxima_data = datetime(
+                    ano_prox, mes_prox, dia_vencimento).date()
 
                 # CRITÉRIOS DE PARADA:
-                
+
                 # 1. Se a próxima despesa for DEPOIS do limite que precisamos ver
                 if proxima_data > data_limite_real:
                     break
-                
+
                 # 2. Se a recorrência tem data fim e a próxima data passa dela
                 if rec.data_fim and proxima_data > rec.data_fim:
                     break
@@ -3298,13 +3316,15 @@ def processar_despesas_recorrentes(negocio, data_limite_solicitada=None):
                     categoria=rec.categoria,
                     pago=False
                 )
-                
+
                 # Atualiza o controle do loop e do objeto
                 data_base = proxima_data
                 rec.ultima_geracao = proxima_data
                 rec.save()
 
 # --- FUNÇÕES DE EXPORTAÇÃO (EXCEL E PDF) ---
+
+
 @user_passes_test(is_admin)
 def exportar_relatorio_excel(request):
     try:
@@ -3315,7 +3335,7 @@ def exportar_relatorio_excel(request):
 
     tipo_relatorio = request.GET.get('tipo', 'faturamento')
     periodo = request.GET.get('periodo', 'mes')
-    
+
     # --- Lógica de Datas ---
     hoje = timezone.now().date()
     if periodo == 'semana':
@@ -3328,7 +3348,7 @@ def exportar_relatorio_excel(request):
     elif periodo == 'ano':
         inicio = hoje.replace(month=1, day=1)
         fim = hoje.replace(month=12, day=31)
-    else: # Custom
+    else:  # Custom
         data_inicio = request.GET.get('inicio')
         data_fim = request.GET.get('fim')
         if data_inicio and data_fim:
@@ -3348,7 +3368,8 @@ def exportar_relatorio_excel(request):
     # Remove o # da cor hexadecimal para o openpyxl
     cor_hex = negocio.cor_primaria.replace('#', '')
     font_titulo = Font(size=14, bold=True, color="FFFFFF")
-    fill_titulo = PatternFill(start_color=cor_hex, end_color=cor_hex, fill_type="solid")
+    fill_titulo = PatternFill(
+        start_color=cor_hex, end_color=cor_hex, fill_type="solid")
     font_header = Font(bold=True)
     alignment_center = Alignment(horizontal="center", vertical="center")
 
@@ -3364,7 +3385,7 @@ def exportar_relatorio_excel(request):
     ws.merge_cells('A2:E2')
     ws['A2'] = f"Gerado por: {request.user.get_full_name()} em {timezone.now().strftime('%d/%m/%Y %H:%M')}"
     ws['A2'].alignment = alignment_center
-    
+
     ws.merge_cells('A3:E3')
     ws['A3'] = f"Período: {inicio.strftime('%d/%m/%Y')} a {fim.strftime('%d/%m/%Y')}"
     ws['A3'].alignment = alignment_center
@@ -3379,16 +3400,19 @@ def exportar_relatorio_excel(request):
             cell = ws.cell(row=row_num, column=col_num)
             cell.value = column_title
             cell.font = font_header
-        
+
         # Dados
-        despesas = Despesa.objects.filter(negocio=negocio, data__range=[inicio, fim]).order_by('data')
+        despesas = Despesa.objects.filter(negocio=negocio, data__range=[
+                                          inicio, fim]).order_by('data')
         for despesa in despesas:
             row_num += 1
-            ws.cell(row=row_num, column=1).value = despesa.data.strftime('%d/%m/%Y')
+            ws.cell(row=row_num, column=1).value = despesa.data.strftime(
+                '%d/%m/%Y')
             ws.cell(row=row_num, column=2).value = despesa.descricao
             ws.cell(row=row_num, column=3).value = despesa.categoria
             ws.cell(row=row_num, column=4).value = float(despesa.valor)
-            ws.cell(row=row_num, column=5).value = "Pago" if despesa.pago else "Pendente"
+            ws.cell(row=row_num,
+                    column=5).value = "Pago" if despesa.pago else "Pendente"
 
     elif tipo_relatorio == 'servicos':
         # Headers
@@ -3400,7 +3424,7 @@ def exportar_relatorio_excel(request):
 
         # Dados (Agrupados)
         servicos = Agendamento.objects.filter(
-            servico__negocio=negocio, 
+            servico__negocio=negocio,
             data__range=[inicio, fim],
             status__in=['Confirmado', 'Concluído']
         ).values('servico__nome', 'servico__categoria__nome').annotate(
@@ -3413,11 +3437,13 @@ def exportar_relatorio_excel(request):
             ws.cell(row=row_num, column=1).value = item['servico__nome']
             ws.cell(row=row_num, column=2).value = item['qtd']
             ws.cell(row=row_num, column=3).value = float(item['total'] or 0)
-            ws.cell(row=row_num, column=4).value = item['servico__categoria__nome'] or '-'
+            ws.cell(row=row_num,
+                    column=4).value = item['servico__categoria__nome'] or '-'
 
-    else: # Faturamento (Padrão)
+    else:  # Faturamento (Padrão)
         # Headers
-        headers = ['Data', 'Horário', 'Cliente', 'Serviço', 'Valor (R$)', 'Status Pagamento']
+        headers = ['Data', 'Horário', 'Cliente',
+                   'Serviço', 'Valor (R$)', 'Status Pagamento']
         for col_num, column_title in enumerate(headers, 1):
             cell = ws.cell(row=row_num, column=col_num)
             cell.value = column_title
@@ -3425,7 +3451,7 @@ def exportar_relatorio_excel(request):
 
         # Dados
         agendamentos = Agendamento.objects.filter(
-            servico__negocio=negocio, 
+            servico__negocio=negocio,
             data__range=[inicio, fim]
         ).order_by('data', 'horario')
 
@@ -3443,8 +3469,9 @@ def exportar_relatorio_excel(request):
     # isso evita o erro com MergedCell no cabeçalho.
     for i, col in enumerate(ws.columns, 1):
         max_length = 0
-        column_letter = get_column_letter(i) # Obtém 'A', 'B', etc. pelo índice
-        
+        # Obtém 'A', 'B', etc. pelo índice
+        column_letter = get_column_letter(i)
+
         for cell in col:
             try:
                 # Ignoramos células vazias ou mescladas problemáticas
@@ -3453,15 +3480,17 @@ def exportar_relatorio_excel(request):
                         max_length = len(str(cell.value))
             except:
                 pass
-        
+
         # Define uma largura mínima razoável e um buffer
         adjusted_width = (max_length + 2)
         ws.column_dimensions[column_letter].width = adjusted_width
 
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename=relatorio_{tipo_relatorio}_{inicio}_{fim}.xlsx'
     wb.save(response)
     return response
+
 
 @user_passes_test(is_admin)
 def exportar_relatorio_pdf(request):
@@ -3473,7 +3502,7 @@ def exportar_relatorio_pdf(request):
 
     tipo_relatorio = request.GET.get('tipo', 'faturamento')
     periodo = request.GET.get('periodo', 'mes')
-    
+
     # --- Lógica de Datas (Mesma do Excel) ---
     hoje = timezone.now().date()
     if periodo == 'semana':
@@ -3510,16 +3539,18 @@ def exportar_relatorio_pdf(request):
     }
 
     if tipo_relatorio == 'despesas':
-        dados = Despesa.objects.filter(negocio=negocio, data__range=[inicio, fim]).order_by('data')
+        dados = Despesa.objects.filter(negocio=negocio, data__range=[
+                                       inicio, fim]).order_by('data')
         total = dados.aggregate(Sum('valor'))['valor__sum'] or 0
-        context['headers'] = ['Data', 'Descrição', 'Categoria', 'Valor', 'Status']
+        context['headers'] = ['Data', 'Descrição',
+                              'Categoria', 'Valor', 'Status']
         context['rows'] = dados
         context['total_geral'] = total
         context['template_type'] = 'despesas'
 
     elif tipo_relatorio == 'servicos':
         dados = Agendamento.objects.filter(
-            servico__negocio=negocio, 
+            servico__negocio=negocio,
             data__range=[inicio, fim],
             status__in=['Confirmado', 'Concluído']
         ).values('servico__nome', 'servico__categoria__nome').annotate(
@@ -3532,16 +3563,18 @@ def exportar_relatorio_pdf(request):
         context['total_geral'] = total
         context['template_type'] = 'servicos'
 
-    else: # Faturamento/Geral
+    else:  # Faturamento/Geral
         dados = Agendamento.objects.filter(
-            servico__negocio=negocio, 
+            servico__negocio=negocio,
             data__range=[inicio, fim]
         ).order_by('data', 'horario')
-        
+
         # Filtra apenas pagos ou confirmados para o total
-        total = dados.filter(status_pagamento='Pago').aggregate(Sum('preco_final'))['preco_final__sum'] or 0
-        
-        context['headers'] = ['Data', 'Horário', 'Cliente', 'Serviço', 'Valor', 'Status']
+        total = dados.filter(status_pagamento='Pago').aggregate(
+            Sum('preco_final'))['preco_final__sum'] or 0
+
+        context['headers'] = ['Data', 'Horário',
+                              'Cliente', 'Serviço', 'Valor', 'Status']
         context['rows'] = dados
         context['total_geral'] = total
         context['template_type'] = 'faturamento'
@@ -3555,7 +3588,7 @@ def exportar_relatorio_pdf(request):
     response['Content-Disposition'] = f'attachment; filename="relatorio_{tipo_relatorio}.pdf"'
 
     pisa_status = pisa.CreatePDF(html, dest=response)
-    
+
     if pisa_status.err:
         return HttpResponse('Erro ao gerar PDF', status=500)
     return response
