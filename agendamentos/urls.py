@@ -48,4 +48,7 @@ urlpatterns = [
     # --- FIM DA NOVA ADIÇÃO ---
     # Rotas de Login Admin (não precisam de slug, pois são globais)
     # Elas serão movidas para o urls.py principal
+
+    path('api/n8n/lembretes-24h/', views.api_lembretes_24h,
+         name='api_lembretes_24h'),
 ]

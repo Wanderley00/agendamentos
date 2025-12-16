@@ -38,6 +38,14 @@ from django.utils.crypto import get_random_string
 
 from .webhooks import disparar_notificacao
 
+from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
+from django.views.decorators.csrf import csrf_exempt
+from .models import Agendamento
+import re
+import os
+
 # --- IMPORTAÇÃO CORRIGIDA ---
 # Adicionamos EmpreendedorProfile e removemos importações duplicadas
 from .models import (
@@ -3624,3 +3632,49 @@ def exportar_relatorio_pdf(request):
     if pisa_status.err:
         return HttpResponse('Erro ao gerar PDF', status=500)
     return response
+
+
+@csrf_exempt
+def api_lembretes_24h(request):
+    """
+    API que retorna JSON com agendamentos de amanhã.
+    Protegida por um Token no Header.
+    """
+    # 1. Segurança Básica: Verifica se quem chamou tem a senha correta
+    token_recebido = request.headers.get('X-N8N-Token')
+    # Defina isso no Render depois
+    token_secreto = os.getenv('N8N_ACCESS_TOKEN', 'senha_super_secreta_123')
+
+    if token_recebido != token_secreto:
+        return JsonResponse({'erro': 'Acesso negado'}, status=403)
+
+    # 2. Lógica: Buscar agendamentos de amanhã
+    hoje = timezone.now().date()
+    amanha = hoje + timedelta(days=1)
+
+    agendamentos = Agendamento.objects.filter(
+        status='Confirmado',
+        data=amanha
+    ).select_related('cliente', 'cliente__user', 'servico', 'servico__negocio')
+
+    lista_envio = []
+
+    for agendamento in agendamentos:
+        # Tratamento do Telefone
+        telefone = agendamento.cliente.telefone
+        telefone_limpo = re.sub(r'\D', '', telefone)
+        if len(telefone_limpo) == 11:  # Adiciona 55 se for celular BR sem DDI
+            telefone_limpo = f"55{telefone_limpo}"
+
+        dados = {
+            "cliente_nome": agendamento.cliente.user.get_full_name() or agendamento.cliente.user.username,
+            "cliente_telefone": telefone_limpo,
+            "servico_nome": agendamento.servico.nome,
+            "data": agendamento.data.strftime('%d/%m/%Y'),
+            "horario": agendamento.horario.strftime('%H:%M'),
+            "local_nome": agendamento.servico.negocio.nome_negocio
+        }
+        lista_envio.append(dados)
+
+    # Retorna a lista para o n8n
+    return JsonResponse({'quantidade': len(lista_envio), 'lista': lista_envio}, safe=False)
