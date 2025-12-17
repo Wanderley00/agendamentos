@@ -3653,7 +3653,7 @@ def api_lembretes_24h(request):
     amanha = hoje + timedelta(days=1)
 
     agendamentos = Agendamento.objects.filter(
-        status='Confirmado',
+        status__in=['Confirmado', 'Pendente'],
         data=amanha
     ).select_related('cliente', 'cliente__user', 'servico', 'servico__negocio')
 
