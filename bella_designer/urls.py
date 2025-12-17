@@ -116,6 +116,9 @@ urlpatterns = [
     path('api/n8n/lembretes-24h/', agendamentos_views.api_lembretes_24h,
          name='api_lembretes_24h_global'),
 
+    path('api/n8n/aniversariantes/', agendamentos_views.api_aniversariantes_dia,
+         name='api_aniversariantes_global'),
+
 
     # --- ROTA PRINCIPAL PARA OS CLIENTES ---
     path('<slug:empreendedor_slug>/',

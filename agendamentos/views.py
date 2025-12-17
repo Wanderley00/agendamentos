@@ -3678,3 +3678,48 @@ def api_lembretes_24h(request):
 
     # Retorna a lista para o n8n
     return JsonResponse({'quantidade': len(lista_envio), 'lista': lista_envio}, safe=False)
+
+
+@csrf_exempt
+def api_aniversariantes_dia(request):
+    """
+    API que retorna clientes fazendo aniversário hoje.
+    Protegida por Token.
+    """
+    # 1. Segurança (Igual ao anterior)
+    token_recebido = request.headers.get('X-N8N-Token')
+    token_secreto = os.getenv('N8N_ACCESS_TOKEN', 'senha_super_secreta_123')
+
+    if token_recebido != token_secreto:
+        return JsonResponse({'erro': 'Acesso negado'}, status=403)
+
+    # 2. Lógica: Filtrar Dia e Mês
+    hoje = timezone.now().date()
+
+    # O Django tem filtros mágicos __day e __month para datas
+    aniversariantes = Cliente.objects.filter(
+        data_nascimento__day=hoje.day,
+        data_nascimento__month=hoje.month
+    ).select_related('user')
+
+    lista_envio = []
+
+    for cliente in aniversariantes:
+        # Tratamento do Telefone
+        telefone = cliente.telefone
+        telefone_limpo = re.sub(r'\D', '', telefone)
+        if len(telefone_limpo) == 11:
+            telefone_limpo = f"55{telefone_limpo}"
+
+        # Pega o primeiro nome para ser mais íntimo
+        nome_completo = cliente.user.get_full_name() or cliente.user.username
+        primeiro_nome = nome_completo.split()[0]
+
+        dados = {
+            "cliente_nome": primeiro_nome,
+            "cliente_telefone": telefone_limpo,
+            "data_nascimento": cliente.data_nascimento.strftime('%d/%m')
+        }
+        lista_envio.append(dados)
+
+    return JsonResponse({'quantidade': len(lista_envio), 'lista': lista_envio}, safe=False)
