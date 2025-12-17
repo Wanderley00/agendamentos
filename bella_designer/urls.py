@@ -79,11 +79,11 @@ urlpatterns = [
     path('api/admin/faturamento/',
          agendamentos_views.api_faturamento, name='api_faturamento'),
     path('api/admin/despesas/', agendamentos_views.api_despesas, name='api_despesas'),
-    
+
     # --- CORREÇÃO APLICADA AQUI: ADICIONANDO AS ROTAS DE RECORRÊNCIA ---
-    path('api/admin/recorrencias/', 
+    path('api/admin/recorrencias/',
          agendamentos_views.api_listar_recorrencias, name='api_listar_recorrencias'),
-    path('api/admin/recorrencias/<int:recorrencia_id>/', 
+    path('api/admin/recorrencias/<int:recorrencia_id>/',
          agendamentos_views.api_gerenciar_recorrencia_detalhe, name='api_gerenciar_recorrencia_detalhe'),
     # -------------------------------------------------------------------
 
@@ -108,8 +108,13 @@ urlpatterns = [
     path('api/admin/agendamentos-pagamento/',
          agendamentos_views.api_agendamentos_pagamento, name='api_agendamentos_pagamento'),
 
-    path('api/admin/exportar/excel/', agendamentos_views.exportar_relatorio_excel, name='exportar_relatorio_excel'),
-    path('api/admin/exportar/pdf/', agendamentos_views.exportar_relatorio_pdf, name='exportar_relatorio_pdf'),
+    path('api/admin/exportar/excel/', agendamentos_views.exportar_relatorio_excel,
+         name='exportar_relatorio_excel'),
+    path('api/admin/exportar/pdf/', agendamentos_views.exportar_relatorio_pdf,
+         name='exportar_relatorio_pdf'),
+
+    path('api/n8n/lembretes-24h/', agendamentos_views.api_lembretes_24h,
+         name='api_lembretes_24h_global'),
 
 
     # --- ROTA PRINCIPAL PARA OS CLIENTES ---
